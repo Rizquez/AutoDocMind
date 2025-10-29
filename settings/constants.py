@@ -17,7 +17,7 @@ Manejador del fichero `.log` para el almacenado de la traza de ejecucion.
 """
 
 
-ALGORITHM_VERSION = '0.0.0'
+ALGORITHM_VERSION = '0.0.1'
 """
 Version actual del algoritmo.
 """

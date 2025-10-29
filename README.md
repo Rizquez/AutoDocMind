@@ -1,4 +1,4 @@
-# AutoDocMind - v.0.0.0
+# AutoDocMind - v.0.0.1
 
 ## 🧾 Descripcion del proyecto
 
@@ -34,7 +34,12 @@ Si no tienes la libreria instalada, puedes ejecutar:
 python -m venv env
 ```
 
-Instala las dependencias:
+Activa el entorno de desarrollo:
+```sh
+venv\Scripts\activate
+```
+
+Una vez activado el entorno, instala las dependencias:
 ```sh
 pip install -r requirements.txt
 ```
@@ -56,7 +61,7 @@ Donde:
 - **output (opcional):** Directorio donde se guardaran los archivos generados, de no indicarse, el carpeta donde se almacenran los archivos se creara en la *raiz de este proyecto*.
 
 > [!NOTE]
-> Para conocer mas **detalles sobre los parametros y argumentos de ejecucion**, consulta los archivos ubicados en: `handlers/*.py`
+> Para conocer mas **detalles sobre los parametros y argumentos de ejecucion**, consulta el archivo ubicado en: *handlers/console.py*
 
 ## 📂 Estructura del proyecto
 
