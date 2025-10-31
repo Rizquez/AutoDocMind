@@ -1,16 +1,16 @@
 # MODULES (EXTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
-from pathlib import Path
-import sys, traceback, logging, os
-from typing import TYPE_CHECKING, Set, Optional, Iterator
+import sys, traceback, logging
+from typing import TYPE_CHECKING
 # ---------------------------------------------------------------------------------------------------------------------
 
 # MODULES (INTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
+from src.utils.scan import scanner
 from helpers.trace import error_trace
+from src.generators import ReadmeHanler
 from settings.constants import ALGORITHM
 from src.analyzers.python import analyze_file
-from src.generators.readme import ReadmeHanler
 
 if TYPE_CHECKING:
     from settings.algorithm import Settings
@@ -36,7 +36,7 @@ def execute(settings: 'Settings') -> None:
         3. Generates a `README` file with the consolidated documentation.
     """
     logger.info(f"Scanning repository: {settings.repository}")
-    files = list(_scanner(settings.repository, settings.included, settings.excluded))
+    files = list(scanner(settings.repository, settings.included, settings.excluded))
     logger.info(f"Number of .py files found: {len(files)}")
 
     modules = []
@@ -52,33 +52,6 @@ def execute(settings: 'Settings') -> None:
     txt = ReadmeHanler.render(modules, settings.repository)
     target = ReadmeHanler.write(txt, settings.output)
     logger.info(f"Ready: {target}")
-
-def _scanner(directory: str, included: Set[str], excluded: Optional[Set[str]] = None) -> Iterator[Path]:
-    """
-    Recursively traverse a directory and generate the paths of files that match the specified extensions, 
-    excluding unwanted folders.
-
-    Args:
-        directory (str):
-            Base path of the repository or project to be analyzed.
-        included (Set[str]):
-            Set of file extensions to include in the scan.
-        excluded (Set[str], optional):
-            Set of directory names to ignore during the search.
-
-    Yields:
-        Path:
-            Absolute path of each file that meets the defined criteria.
-    """
-    root = Path(directory).resolve()
-
-    for dirpath, dirnames, filenames in os.walk(root, followlinks=False):
-        dirnames[:] = [d for d in dirnames if d not in excluded]
-
-        for filename in filenames:
-            path = Path(dirpath) / filename
-            if path.suffix in included:
-                yield path
 
 # ---------------------------------------------------------------------------------------------------------------------
 # END OF FILE

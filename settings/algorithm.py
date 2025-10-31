@@ -96,7 +96,10 @@ class Settings:
             Set[str]:
                 Updated set of exclusions.
         """
-        return EXCLUDED.update(set(excluded.split(',')))
+        if excluded:
+            return EXCLUDED.update(set(excluded.split(',')))
+
+        return EXCLUDED
 
 # ---------------------------------------------------------------------------------------------------------------------
 # END OF FILE

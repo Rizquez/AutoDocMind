@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 __all__ = ['ManageLogger']
 
-LOGGER_FILE = 'AutoDocMind'
+LOGGER_FILE = 'logger'
 
 class ManageLogger:
     """
@@ -98,13 +98,13 @@ class ManageLogger:
         Args:
             file (str):
                 Full path of the log file.
-            level (int, optional):
+            level (int):
                 Log level.
-            size (int, optional):
+            size (int):
                 Maximum size the file can have before backing up.
-            backup (int, optional):
+            backup (int):
                 Number of backups that can be generated.
-            encoding (str, optional):
+            encoding (str):
                 Encoding format for writing the log file.
 
         Returns:

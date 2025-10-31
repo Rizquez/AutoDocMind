@@ -61,7 +61,7 @@ class Console:
         )
 
         parser.add_argument(
-            '--exclude',
+            '--excluded',
             help="Additional files/extensions to exclude from the scan, separated by commas if multiple are specified"
         )
 
