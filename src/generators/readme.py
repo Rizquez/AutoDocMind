@@ -15,11 +15,11 @@ if TYPE_CHECKING:
 # OPERATIONS / CLASS CREATION / GENERAL FUNCTIONS
 # ---------------------------------------------------------------------------------------------------------------------
 
-__all__ = ['ReadmeHanler']
+__all__ = ['ReadmeGenerator']
 
 README_FILE = 'README.md'
 
-class ReadmeHanler:
+class ReadmeGenerator:
     """
     Utility for building and persisting project documentation in README format.
 

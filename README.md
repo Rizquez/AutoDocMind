@@ -1,4 +1,4 @@
-# 🤖 AutoDocMind - v.0.2.1
+# 🤖 AutoDocMind - v.0.3.0
 
 ## 🧾 Project description
 
@@ -102,9 +102,15 @@ AutoDocMind/
 │   │   └── python.py
 │   ├── generators
 │   │   ├── __init__.py
+│   │   ├── html.py
 │   │   └── readme.py
 │   ├── models
 │   │   └── structures.py
+│   ├── static
+│   │   ├── styles
+│   │   │   └── main.css
+│   │   └── templates
+│   │       └── base.html
 │   ├── utils
 │   │   ├── scan.py
 │   │   └── strings.py

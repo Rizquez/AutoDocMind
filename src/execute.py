@@ -8,9 +8,9 @@ from typing import TYPE_CHECKING
 # ---------------------------------------------------------------------------------------------------------------------
 from src.utils.scan import scanner
 from helpers.trace import error_trace
-from src.generators import ReadmeHanler
 from settings.constants import ALGORITHM
 from src.analyzers.python import analyze_file
+from src.generators import ReadmeGenerator, HtmlGenerator
 
 if TYPE_CHECKING:
     from settings.algorithm import Settings
@@ -49,9 +49,14 @@ def execute(settings: 'Settings') -> None:
             error_trace(tb, logger, error)
 
     logger.info("Generating README ...")
-    txt = ReadmeHanler.render(modules, settings.repository)
-    target = ReadmeHanler.write(txt, settings.output)
-    logger.info(f"Ready: {target}")
+    readme_txt = ReadmeGenerator.render(modules, settings.repository)
+    readme_target = ReadmeGenerator.write(readme_txt, settings.output)
+    logger.info(f"Ready README: {readme_target}")
+
+    logger.info("Generating HTML ...")
+    html_txt = HtmlGenerator.render(modules, settings.repository)
+    html_target = HtmlGenerator.write(html_txt, settings.output)
+    logger.info(f"Ready HTML: {html_target}")
 
 # ---------------------------------------------------------------------------------------------------------------------
 # END OF FILE
