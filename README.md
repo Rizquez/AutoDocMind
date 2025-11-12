@@ -94,6 +94,11 @@ AutoDocMind/
 ├── helpers
 │   ├── loggers.py
 │   └── trace.py
+├── public
+│   ├── styles
+│   │   └── main.css
+│   └── templates
+│       └── base.html
 ├── settings
 │   ├── algorithm.py
 │   └── constants.py
@@ -106,11 +111,6 @@ AutoDocMind/
 │   │   └── readme.py
 │   ├── models
 │   │   └── structures.py
-│   ├── static
-│   │   ├── styles
-│   │   │   └── main.css
-│   │   └── templates
-│   │       └── base.html
 │   ├── utils
 │   │   ├── scan.py
 │   │   └── strings.py

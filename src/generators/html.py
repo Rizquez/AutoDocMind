@@ -21,8 +21,8 @@ __all__ = ['HtmlGenerator']
 
 INDEX_FILE = 'index.html'
 
-TEMPLATE_FILE = Path('src/static/templates/base.html')
-STYLE_FILE = Path('src/static/styles/main.css')
+TEMPLATE_FILE = Path('public/templates/base.html')
+STYLE_FILE = Path('public/styles/main.css')
 
 class HtmlGenerator:
     """
@@ -75,7 +75,7 @@ class HtmlGenerator:
             label = cls.__escape(path.relative_to(root).as_posix())
 
             parts = [f'<section id="{id_module}" data-module="{label.lower()}">']
-            parts.append(f'<h2>{label}</h2>')
+            parts.append(f'<h2>Module: {label}</h2>')
 
             if module.classes:
                 parts.append('<h3>Classes</h3>')
@@ -84,18 +84,8 @@ class HtmlGenerator:
                     parts.append(
                         f"""
                             <details id="{id_clss}">
-                                <summary>
-                                    {cls.__escape(clss.name)}
-                                </summary>
-                                {
-                                    '<p>' 
-                                    + 
-                                    cls.__escape(DocStrings.text_format(
-                                        clss.doc, clean=True, cleaned=cleaned
-                                    )) 
-                                    + 
-                                    '</p>' if clss.doc else ''
-                                }
+                                <summary>{cls.__escape(clss.name)}</summary>
+                                {DocStrings.to_html(clss.doc, cleaned=cleaned) if clss.doc else ''}
                                 {cls.__render_methods(clss.methods, cleaned)}
                             </details>
                         """
@@ -109,15 +99,7 @@ class HtmlGenerator:
                         f"""
                             <details id="{fid}">
                                 <summary>{cls.__escape(func.name)} - Number of lines: {func.lineno}</summary>
-                                {
-                                    '<p>' 
-                                    + 
-                                    cls.__escape(DocStrings.text_format(
-                                        func.doc, clean=True, cleaned=cleaned
-                                    )) 
-                                    + 
-                                    '</p>' if func.doc else ''
-                                }
+                                {DocStrings.to_html(func.doc, cleaned=cleaned) if func.doc else ''}
                             </details>
                         """
                     )
@@ -165,15 +147,7 @@ class HtmlGenerator:
                         <div>
                             Method: {html.escape(method.name)} (Number of lines: {method.lineno})
                         </div>
-                        {
-                            '<p>' 
-                            + 
-                            cls.__escape(DocStrings.text_format(
-                                method.doc, clean=True, cleaned=cleaned
-                            )) 
-                            + 
-                            '</p>' if method.doc else ''
-                        }
+                        {DocStrings.to_html(method.doc, cleaned=cleaned) if method.doc else ''}
                     </div>
                 """
             )

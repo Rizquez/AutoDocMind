@@ -63,23 +63,13 @@ class ReadmeGenerator:
                     lines.append(f'### Class: `{clss.name}`\n')
 
                     if clss.doc:
-                        lines.append(DocStrings.text_format(
-                            clss.doc, 
-                            tabulation=True, 
-                            clean=True, 
-                            cleaned=cleaned
-                        ) + '\n')
+                        lines.append(DocStrings.to_readme(clss.doc, cleaned=cleaned) + '\n')
 
                     for meth in clss.methods:
                         lines.append(f'#### Method: `{meth.name}` (*Number of lines: {meth.lineno}*)\n')
 
                         if meth.doc:
-                            lines.append(DocStrings.text_format(
-                                meth.doc, 
-                                tabulation=True, 
-                                clean=True, 
-                                cleaned=cleaned
-                            ) + '\n')
+                            lines.append(DocStrings.to_readme(meth.doc, cleaned=cleaned) + '\n')
 
             if module.functions:
                 lines.append('### Functions\n')
@@ -88,12 +78,7 @@ class ReadmeGenerator:
                     lines.append(f'#### `{func.name}` - *Number of lines: {func.lineno}*\n')
 
                     if func.doc:
-                        lines.append(DocStrings.text_format(
-                            func.doc, 
-                            tabulation=True, 
-                            clean=True, 
-                            cleaned=cleaned
-                        ) + '\n')
+                        lines.append(DocStrings.to_readme(func.doc, cleaned=cleaned) + '\n')
 
         return '\n'.join(lines)
 
