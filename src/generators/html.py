@@ -23,6 +23,8 @@ INDEX_FILE = 'index.html'
 
 TEMPLATE_FILE = Path('public/templates/base.html')
 STYLE_FILE = Path('public/styles/main.css')
+NO_DOC_MODULE = 'This module does not contain documentation on classes or functions.'
+NO_DOC_FUNCTION = 'This method/function does not contain documentation.'
 
 class HtmlGenerator:
     """
@@ -78,7 +80,7 @@ class HtmlGenerator:
             parts.append(f'<h2>Module: {label}</h2>')
 
             if not module.classes and not module.functions:
-                parts.append('<p class=italics>This module does not contain documentation on classes or functions.</p>')
+                parts.append(f'<p class=italics>{NO_DOC_MODULE}</p>')
             else:
                 if module.classes:
                     parts.append('<h3>Classes</h3>')
@@ -89,7 +91,7 @@ class HtmlGenerator:
                                 <details id="{id_clss}">
                                     <summary>{cls.__escape(clss.name)}</summary>
                                     <div class="card function">
-                                        {DocStrings.to_html(clss.doc, cleaned=cleaned) if clss.doc else '<br/>'}
+                                        {DocStrings.to_html(clss.doc, cleaned=cleaned) if clss.doc else NO_DOC_FUNCTION}
                                         {cls.__render_methods(clss.methods, cleaned)}
                                     </div>
                                 </details>
@@ -105,7 +107,7 @@ class HtmlGenerator:
                                 <details id="{fid}">
                                     <summary>{cls.__escape(func.name)} (Declared in line: {func.lineno})</summary>
                                     <div class="card function">
-                                        {DocStrings.to_html(func.doc, cleaned=cleaned) if func.doc else '<br/>'}
+                                        {DocStrings.to_html(func.doc, cleaned=cleaned) if func.doc else NO_DOC_FUNCTION}
                                     </div>
                                 </details>
                             """
@@ -151,8 +153,8 @@ class HtmlGenerator:
             out.append(
                 f"""
                     <div class="card method">
-                        <span class="italics">{html.escape(method.name)} (Declared in line: {method.lineno})</span>
-                        {DocStrings.to_html(method.doc, cleaned=cleaned) if method.doc else '<br/>'}
+                        <p class="italics declared">{html.escape(method.name)} (Declared in line: {method.lineno})</p>
+                        {DocStrings.to_html(method.doc, cleaned=cleaned) if method.doc else NO_DOC_FUNCTION}
                     </div>
                 """
             )
