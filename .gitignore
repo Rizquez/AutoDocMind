@@ -2,5 +2,8 @@
 
 **/venv/
 
+**/.dev/
 **/.data/
 **/.notes/
+
+**/AutoDocMind-Output/
