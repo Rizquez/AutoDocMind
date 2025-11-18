@@ -1,4 +1,4 @@
-# 🤖 AutoDocMind - v.0.3.0
+# 🤖 AutoDocMind - v.0.4.0
 
 ## 🧾 Project description
 
@@ -29,7 +29,15 @@ Technical documentation often lags behind the pace of development, creating thre
 
 ## 🛠️ Key features
 
-...
+- Automatic analysis of projects in `Python` and `C#`.
+- Detection of classes, methods, and functions (depending on the language).
+- Obtaining the line where each element is declared.
+- Extraction of *docstrings* in Python.
+- Extraction and processing of *XML* documentation in C#.
+- Cleaning and uniform formatting of documentation before rendering.
+- Generation of documentation in `README.md`.
+- Generation of interactive `HTML` documentation with sidebar and collapsible sections.
+- `CLI` support for specifying *framework*, *repository*, *exclusions*, and *output folder*.
 
 ## 💽 Installation (Windows)
 

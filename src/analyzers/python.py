@@ -14,14 +14,14 @@ from src.models.structures import FunctionInfo, ClassInfo, ModuleInfo
 # OPERATIONS / CLASS CREATION / GENERAL FUNCTIONS
 # ---------------------------------------------------------------------------------------------------------------------
 
-__all__ = ['analyze_file']
+__all__ = ['analyze_python']
 
 logger = logging.getLogger(ALGORITHM)
 """
 Instance of the logger used by the analysis module.
 """
 
-def analyze_file(path: Path) -> ModuleInfo:
+def analyze_python(path: Path) -> ModuleInfo:
     """
     Analyzes a Python file and extracts structural information about its modules, classes, and functions.
 
