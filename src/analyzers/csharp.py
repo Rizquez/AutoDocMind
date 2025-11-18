@@ -94,29 +94,29 @@ def analyze_csharp(path: Path) -> ModuleInfo:
 
         # Count keys to delimit the block
         depth = 0
-        j = open_brace_idx
+        idx = open_brace_idx
         end_idx = len(src)
-        while j < len(src):
-            if src[j] == "{":
+
+        while idx < len(src):
+            if src[idx] == "{":
                 depth += 1
-            elif src[j] == "}":
+            elif src[idx] == "}":
                 depth -= 1
+
                 if depth == 0:
-                    end_idx = j
+                    end_idx = idx
                     break
-            j += 1
+            idx += 1
 
         class_block = src[open_brace_idx:end_idx]
 
-        for m in METHOD_RE.finditer(class_block):
-            meth_name = m.group(1)
-            meth_abs_start = open_brace_idx + m.start()
-            meth_lineno = src.count("\n", 0, meth_abs_start) + 1
-            meth_doc = _collect_xml_doc(lines, meth_lineno - 1)
+        for method in METHOD_RE.finditer(class_block):
+            method_name = method.group(1)
+            method_abs_start = open_brace_idx + method.start()
+            method_lineno = src.count("\n", 0, method_abs_start) + 1
+            method_doc = _collect_xml_doc(lines, method_lineno - 1)
 
-            cls_info.methods.append(
-                FunctionInfo(name=meth_name, lineno=meth_lineno, doc=meth_doc)
-            )
+            cls_info.methods.append(FunctionInfo(name=method_name, lineno=method_lineno, doc=method_doc))
 
         classes.append(cls_info)
 
@@ -202,6 +202,7 @@ def _collect_xml_doc(lines: List[str], start_idx: int) -> Optional[str]:
     summary_el = root.find("summary")
     if summary_el is not None:
         summary_text = _xml_node_to_text(summary_el).strip()
+
         if summary_text:
             parts.append(summary_text)
             parts.append("")
@@ -210,19 +211,23 @@ def _collect_xml_doc(lines: List[str], start_idx: int) -> Optional[str]:
     params = root.findall("param")
     if params:
         parts.append("Params:")
+
         for p in params:
             name = p.attrib.get("name", "").strip()
             text = _xml_node_to_text(p).strip()
+
             if name:
                 parts.append(f"  {name}: {text}")
             else:
                 parts.append(f"  {text}")
+
         parts.append("")
 
     # RETURNS
     returns_el = root.find("returns")
     if returns_el is not None:
         returns_text = _xml_node_to_text(returns_el).strip()
+
         if returns_text:
             parts.append("Returns:")
             parts.append(f"  {returns_text}")
@@ -232,13 +237,16 @@ def _collect_xml_doc(lines: List[str], start_idx: int) -> Optional[str]:
     exceptions = root.findall("exception")
     if exceptions:
         parts.append("Exceptions:")
+
         for ex in exceptions:
             cref = ex.attrib.get("cref", "").strip().lstrip("T:") # Usually comes as T:Name
             text = _xml_node_to_text(ex).strip()
+
             if cref:
                 parts.append(f"  {cref}: {text}")
             else:
                 parts.append(f"  {text}")
+
         parts.append("")
 
     # Cleaning: remove any excess blank lines at the end
@@ -277,10 +285,12 @@ def _xml_node_to_text(node: ET.Element) -> str:
             # Sometimes it comes as T:Namespace.Type
             if ":" in cref:
                 cref = cref.split(":", 1)[-1]
+
             if cref:
                 parts.append(cref)
         else:
             text_child = _xml_node_to_text(child)
+            
             if text_child:
                 parts.append(text_child)
 
