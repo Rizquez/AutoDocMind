@@ -19,11 +19,15 @@ __all__ = ['Settings']
 
 OUTPUT_FOLDER = 'AutoDocMind-Output'
 
-INCLUDED: Set[str] = {'.py'}
+EXTENSIONS = {
+    'python': {'.py'},
+    'csharp': {'.cs'}
+}
 
 EXCLUDED: Set[str] = {
     '.git', '.hg', '.svn', '.idea', '.vscode', '.ruff_cache', '.mypy_cache', '.pytest_cache', '.tox', '.eggs', 
-    '__pycache__', 'build', 'dist', 'site-packages', 'node_modules', 'venv', '.venv', 'env', '.env'
+    '__pycache__', 'build', 'dist', 'site-packages', 'node_modules', 'venv', '.venv', 'env', '.env', 'bin', 'obj',
+    'Debug', 'Release', '.vs'
 }
 
 class Settings:
@@ -38,10 +42,10 @@ class Settings:
     """
 
     def __init__(self, args: 'Namespace') -> None:
-        self.__framework = args.framework
-        self.__repository = args.repository
-        self.__excluded = self.__set_excluded(args.excluded)
-        self.__included = INCLUDED
+        self.__framework: str = args.framework
+        self.__repository: str = args.repository
+        self.__excluded: Set[str] = self.__set_excluded(args.excluded)
+        self.__included: Set[str] = EXTENSIONS.get(self.__framework.lower(), set())
 
         if args.output:
             self.__output = os.path.join(args.output, OUTPUT_FOLDER)

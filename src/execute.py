@@ -6,10 +6,10 @@ from typing import TYPE_CHECKING
 
 # MODULES (INTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
+from src.analyzers import *
 from src.utils.scan import scanner
 from helpers.trace import error_trace
 from settings.constants import ALGORITHM
-from src.analyzers.python import analyze_file
 from src.generators import ReadmeGenerator, HtmlGenerator
 
 if TYPE_CHECKING:
@@ -37,12 +37,14 @@ def execute(settings: 'Settings') -> None:
     """
     logger.info(f"Scanning repository: {settings.repository}")
     files = list(scanner(settings.repository, settings.included, settings.excluded))
-    logger.info(f"Number of .py files found: {len(files)}")
+    logger.info(f"Number of {settings.framework} files found: {len(files)}")
+    
+    method = globals().get(f'analyze_{settings.framework}')
 
     modules = []
     for file in files:
         try:
-            modules.append(analyze_file(file))
+            modules.append(method(file))
         except Exception:
             _, error, line_error = sys.exc_info()
             tb = traceback.extract_tb(line_error)

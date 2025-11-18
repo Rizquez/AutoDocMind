@@ -45,7 +45,7 @@ class Console:
         parser.add_argument(
             '--framework',
             required=True,
-            choices=['python'],
+            choices=['python', 'csharp'],
             help="Programming languages and frameworks supported by the algorithm"
         )
 
