@@ -42,7 +42,7 @@ ATTRIBUTE_RE = re.compile(
     r'^\s*(?:public|private|protected|internal)\s*'
     r'(?:static\s+|readonly\s+|const\s+)?'
     r'[\w<>\[\],\s]+\s+([A-Za-z_][A-Za-z0-9_]*)\s*'
-    r'(?:{[^}]*}|=|;)',
+    r'(?:{[^}]*}|=>|=|;)',
     re.MULTILINE
 )
 
@@ -116,7 +116,22 @@ def analyze_csharp(path: Path) -> ModuleInfo:
                     break
             idx += 1
 
+        # Regular expression to detect constructor methods
+        CTOR_RE = re.compile(
+            rf'^\s*(?:public|private|protected|internal)\s*'
+            rf'(?:static\s+)?'
+            rf'{re.escape(cls_name)}\s*\([^)]*\)\s*{{?',
+            re.MULTILINE
+        )
+
         class_block = src[open_brace_idx:end_idx]
+
+        for ctor in CTOR_RE.finditer(class_block):
+            ctor_abs_start = open_brace_idx + ctor.start()
+            ctor_lineno = src.count('\n', 0, ctor_abs_start) + 1
+            ctor_doc = _collect_xml_doc(lines, ctor_lineno - 1)
+
+            cls_info.methods.append(FunctionInfo(name=cls_name, lineno=ctor_lineno, doc=ctor_doc))
 
         for method in METHOD_RE.finditer(class_block):
             method_name = method.group(1)

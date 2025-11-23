@@ -1,4 +1,4 @@
-# 🤖 AutoDocMind - v.0.4.2
+# 🤖 AutoDocMind - v.0.4.3
 
 ## 🧾 Project description
 
@@ -32,7 +32,7 @@ Technical documentation often lags behind the pace of development, creating thre
 - Automatic analysis of projects in `C#`.
 - Detection of classes, methods, and functions (depending on the language).
 - Cleaning and uniform formatting of documentation before rendering.
-- Generation of documentation in `README.md`.
+- Generation of documentation in `README`.
 - `CLI` support for specifying options.
 
 ## 💽 Installation (Windows)
@@ -74,7 +74,7 @@ pip install -r requirements.txt
 To run the application from the console, you can use the following command shown as an example:
 
 ```sh
-python main.py --framework=... --repository=... --output=... --excluded=... --typeof=...
+python main.py --framework=... --repository=... --output=... --excluded=...
 ```
 
 Where:
@@ -83,7 +83,6 @@ Where:
 - **repository:** Directory of the repository that hosts the project.
 - **output (optional):** Directory where the generated files will be saved. If not specified, the folder where the files are stored will be created in the *root of this project*.
 - **excluded (optional):** Additional files and extensions to exclude from the scan, separated by commas if multiple are specified.
-- **typeof (optional):** Type of document to generate, by default it will be a README.
 
 > [!NOTE]
 > For more details about the parameters and execution arguments, see the file located at: *handlers/console.py*
@@ -99,11 +98,6 @@ AutoDocMind/
 ├── helpers
 │   ├── loggers.py
 │   └── trace.py
-├── public
-│   ├── styles
-│   │   └── main.css
-│   └── templates
-│       └── base.html
 ├── settings
 │   ├── algorithm.py
 │   └── constants.py

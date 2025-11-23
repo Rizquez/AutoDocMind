@@ -1,7 +1,7 @@
 # MODULES (EXTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
 import sys, traceback, logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 # ---------------------------------------------------------------------------------------------------------------------
 
 # MODULES (INTERNAL)
@@ -50,12 +50,10 @@ def execute(settings: 'Settings') -> None:
             tb = traceback.extract_tb(line_error)
             error_trace(tb, logger, error)
 
-    cls = globals().get(f'{settings.typeof.capitalize()}Generator')
-
-    logger.info(f"Generating {settings.typeof.upper()} ...")
-    txt = cls.render(modules, settings.repository)
-    target = cls.write(txt, settings.output)
-    logger.info(f"Ready {settings.typeof.upper()}: {target}")
+    logger.info(f"Generating README ...")
+    txt = Readme.render(modules, settings.repository)
+    target = Readme.write(txt, settings.output)
+    logger.info(f"Ready README: {target}")
 
 # ---------------------------------------------------------------------------------------------------------------------
 # END OF FILE

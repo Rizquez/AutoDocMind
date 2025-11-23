@@ -6,8 +6,8 @@ from typing import List, TYPE_CHECKING
 
 # MODULES (INTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
-from settings.constants import ALGORITHM_VERSION
 from src.utils.strings import DocStrings
+from settings.constants import ALGORITHM_VERSION, NO_METHOD, NO_FUNCTION, NO_CLASS, NO_MODULE, NO_ATTRIBUTE
 
 if TYPE_CHECKING:
     from src.models.structures import ModuleInfo
@@ -16,11 +16,11 @@ if TYPE_CHECKING:
 # OPERATIONS / CLASS CREATION / GENERAL FUNCTIONS
 # ---------------------------------------------------------------------------------------------------------------------
 
-__all__ = ['ReadmeGenerator']
+__all__ = ['Readme']
 
 README_FILE = 'README.md'
 
-class ReadmeGenerator:
+class Readme:
     """
     Utility for building and persisting project documentation in README format.
 
@@ -60,7 +60,7 @@ class ReadmeGenerator:
             lines.append(f'## 🗂️ Module: `{relative.as_posix()}`\n')
 
             if not module.classes and not module.functions:
-                lines.append('*This module does not contain documentation on classes or functions.*\n')
+                lines.append(f'*{NO_MODULE}*\n')
             else:
                 if module.classes:
                     for clss in module.classes:
@@ -70,21 +70,18 @@ class ReadmeGenerator:
                                 f'{DocStrings.to_readme(clss.doc, cleaned=cleaned, tabulation=False)}\n'
                             )
                         else:
-                            lines.append(
-                                f'### 📜 Class: `{clss.name}` - '
-                                '*This class does not contain documentation or it has not been possible to extract it.*\n'
-                            )
+                            lines.append(f'### 📜 Class: `{clss.name}` - *{NO_CLASS}*\n')
 
                         for attr in clss.attributes:
                             if attr.doc:
                                 lines.append(
-                                    f'#### 📌 *Attribute declared in line {attr.lineno}*: `{attr.name}` \n'
+                                    f'#### 📌 *Attribute declared in line {attr.lineno}*: `{attr.name}`\n'
                                     f'{DocStrings.to_readme(attr.doc, cleaned=cleaned, tabulation=False)}\n'
                                 )
                             else:
                                 lines.append(
                                     f'#### 📌 *Attribute declared in line {attr.lineno}*: `{attr.name}` - '
-                                    '*This attribute does not contain documentation or it has not been possible to extract it.*\n'
+                                    f'*{NO_ATTRIBUTE}*\n'
                                 )
 
                         for meth in clss.methods:
@@ -96,7 +93,7 @@ class ReadmeGenerator:
                             else:
                                 lines.append(
                                     f'#### 🛠️ *Method declared in line {meth.lineno}*: `{meth.name}` - '
-                                    '*This method does not contain documentation or it has not been possible to extract it.*\n'
+                                    f'*{NO_METHOD}*\n'
                                 )
 
                 if module.functions:
@@ -112,7 +109,7 @@ class ReadmeGenerator:
                         else:
                             lines.append(
                                 f'#### 🛠️ *Function declared in line {func.lineno}*: `{func.name}` - '
-                                '*This function does not contain documentation or it has not been possible to extract it.*\n'
+                                f'*{NO_FUNCTION}*\n'
                             )
 
         return '\n'.join(lines)

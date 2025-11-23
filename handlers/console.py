@@ -65,13 +65,6 @@ class Console:
             help="Additional files/extensions to exclude from the scan, separated by commas if multiple are specified"
         )
 
-        parser.add_argument(
-            '--typeof',
-            choices=['readme'],
-            default='readme',
-            help="Type of document to generate, by default it will be a readme"
-        )
-
         args = parser.parse_args()
 
         cls.__validate(args, parser)
