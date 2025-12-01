@@ -1,15 +1,14 @@
 # MODULES (EXTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
-import logging, re
 from pathlib import Path
 from typing import List, Optional
-import xml.etree.ElementTree as ET
+import logging, re, xml.etree.ElementTree as ET
 # ---------------------------------------------------------------------------------------------------------------------
 
 # MODULES (INTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
+from src.models.structures import *
 from settings.constants import ALGORITHM
-from src.models.structures import FunctionInfo, ClassInfo, ModuleInfo
 # ---------------------------------------------------------------------------------------------------------------------
 
 # OPERATIONS / CLASS CREATION / GENERAL FUNCTIONS
@@ -22,7 +21,7 @@ logger = logging.getLogger(ALGORITHM)
 Instance of the logger used by the analysis module.
 """
 
-# Regular expression to detect classes, interfaces, records, and structs in C#
+# Regular expression to detect classes, interfaces, records and structs
 CLASS_RE = re.compile(
     r'^\s*(?:public|internal|protected|private)?\s*'
     r'(?:abstract|sealed|static|partial)?\s*'
@@ -35,6 +34,15 @@ METHOD_RE = re.compile(
     r'^\s*(?:public|private|protected|internal)\s*'
     r'(?:static\s+|virtual\s+|override\s+|async\s+|sealed\s+|partial\s+)*'
     r'[\w<>\[\],\s]+\s+([A-Za-z_][A-Za-z0-9_]*)\s*\([^)]*\)\s*{?',
+    re.MULTILINE
+)
+
+# Regular expression to detect fields/properties in a class
+ATTRIBUTE_RE = re.compile(
+    r'^\s*(?:public|private|protected|internal)\s*'
+    r'(?:static\s+|readonly\s+|const\s+)?'
+    r'[\w<>\[\],\s]+\s+([A-Za-z_][A-Za-z0-9_]*)\s*'
+    r'(?:{[^}]*}|=>|=|;)',
     re.MULTILINE
 )
 
@@ -72,56 +80,103 @@ def analyze_csharp(path: Path) -> ModuleInfo:
 
     classes: List[ClassInfo] = []
 
-    # Search classes/records/structs/interfaces
     for cls_match in CLASS_RE.finditer(src):
         kind = cls_match.group(1)
         cls_name = cls_match.group(2)
         
-        # Calculate line (1-based)
         cls_start = cls_match.start()
         cls_lineno = src.count("\n", 0, cls_start) + 1
 
         cls_doc = _collect_xml_doc(lines, cls_lineno - 1)
-        cls_info = ClassInfo(name=f"{cls_name}", lineno=cls_lineno, doc=cls_doc)
+        cls_decorators = _collect_decorators(lines, cls_lineno - 1)
 
-        # Within the approximate block of that class, search for methods (simple heuristic)
+        cls_info = ClassInfo(
+            name=cls_name, 
+            lineno=cls_lineno, 
+            doc=cls_doc, 
+            decorators=cls_decorators
+        )
+
+        # Within the approximate block of that class, search for methods
         # Find the closest opening key and count keys to narrow down the block
-        open_brace_idx = src.find("{", cls_match.end())
-        if open_brace_idx == -1:
+        idx_brace = src.find('{', cls_match.end())
+        if idx_brace == -1:
             logger.warning(f"Could not find '{{' for {kind} {cls_name} in {path.name} (Line {cls_lineno})")
             classes.append(cls_info)
             continue
 
         # Count keys to delimit the block
         depth = 0
-        idx = open_brace_idx
-        end_idx = len(src)
+        idx = idx_brace
+        idx_end = len(src)
 
         while idx < len(src):
-            if src[idx] == "{":
+            if src[idx] == '{':
                 depth += 1
-            elif src[idx] == "}":
+            elif src[idx] == '}':
                 depth -= 1
 
                 if depth == 0:
-                    end_idx = idx
+                    idx_end = idx
                     break
+            else:
+                logger.warning() # TODO
             idx += 1
 
-        class_block = src[open_brace_idx:end_idx]
+        # Regular expression to detect constructor methods
+        CTOR_RE = re.compile(
+            rf'^\s*(?:public|private|protected|internal)\s*'
+            rf'(?:static\s+)?'
+            rf'{re.escape(cls_name)}\s*\([^)]*\)\s*{{?',
+            re.MULTILINE
+        )
+
+        class_block = src[idx_brace:idx_end]
+
+        for ctor in CTOR_RE.finditer(class_block):
+            ctor_abs_start = idx_brace + ctor.start()
+            ctor_lineno = src.count('\n', 0, ctor_abs_start) + 1
+            ctor_doc = _collect_xml_doc(lines, ctor_lineno - 1)
+
+            cls_info.methods.append(
+                FunctionInfo(
+                    name=cls_name, 
+                    lineno=ctor_lineno, 
+                    doc=ctor_doc
+                )
+            )
 
         for method in METHOD_RE.finditer(class_block):
             method_name = method.group(1)
-            method_abs_start = open_brace_idx + method.start()
-            method_lineno = src.count("\n", 0, method_abs_start) + 1
+            method_abs_start = idx_brace + method.start()
+            method_lineno = src.count('\n', 0, method_abs_start) + 1
             method_doc = _collect_xml_doc(lines, method_lineno - 1)
+            method_decorators = _collect_decorators(lines, method_lineno - 1)
 
-            cls_info.methods.append(FunctionInfo(name=method_name, lineno=method_lineno, doc=method_doc))
+            cls_info.methods.append(
+                FunctionInfo(
+                    name=method_name,
+                    lineno=method_lineno,
+                    doc=method_doc,
+                    decorators=method_decorators
+                )
+            )
+
+        for attr in ATTRIBUTE_RE.finditer(class_block):
+            attr_name = attr.group(1)
+            attr_abs_start = idx_brace + attr.start()
+            attr_lineno = src.count('\n', 0, attr_abs_start) + 1
+            attr_doc = _collect_xml_doc(lines, attr_lineno - 1)
+
+            cls_info.attributes.append(
+                AttributeInfo(
+                    name=attr_name, 
+                    lineno=attr_lineno, 
+                    doc=attr_doc
+                )
+            )
 
         classes.append(cls_info)
-
-    if not classes:
-        logger.info(f"No classes/methods detected in: {path.name}")
 
     return ModuleInfo(
         path=str(path),
@@ -160,20 +215,27 @@ def _collect_xml_doc(lines: List[str], start_idx: int) -> Optional[str]:
         Optional[str]:
             Processed and cleaned text from the documentation, or None if there is no associated documentation.
     """
-    i = start_idx - 1
+    idx = start_idx - 1
     buf: List[str] = []
 
     # We move upward collecting lines ///
-    while i >= 0:
-        s = lines[i].rstrip()
+    while idx >= 0:
+        txt = lines[idx].rstrip()
 
-        if s.strip().startswith("///"):
-            buf.append(s.strip().lstrip("/").strip())
-            i -= 1
+        # XML format
+        if txt.strip().startswith('///'):
+            buf.append(txt.strip().lstrip('/').strip())
+            idx -= 1
             continue
 
-        if s.strip() == "":
-            i -= 1
+        # Empty lines
+        if txt.strip() == '':
+            idx -= 1
+            continue
+
+        # C# attributes
+        if txt.strip().startswith('[') and txt.strip().endswith(']'):
+            idx -= 1
             continue
 
         break
@@ -182,14 +244,14 @@ def _collect_xml_doc(lines: List[str], start_idx: int) -> Optional[str]:
         return None
 
     buf.reverse()
-    raw = "\n".join(buf)
+    raw = '\n'.join(buf)
 
     # If it does not appear to be documentation XML, we return it as is
-    if not any(tag in raw for tag in ("<summary", "<param", "<returns", "<exception")):
+    if not any(tag in raw for tag in ('<summary', '<param', '<returns', '<exception')):
         return raw
 
     # We wrap it in a root so that it is valid XML
-    xml_source = "<root>\n" + raw + "\n</root>"
+    xml_source = '<root>\n' + raw + '\n</root>'
 
     try:
         root = ET.fromstring(xml_source)
@@ -199,61 +261,62 @@ def _collect_xml_doc(lines: List[str], start_idx: int) -> Optional[str]:
     parts: List[str] = []
 
     # SUMMARY
-    summary_el = root.find("summary")
-    if summary_el is not None:
-        summary_text = _xml_node_to_text(summary_el).strip()
+    summary = root.find('summary')
+    if summary is not None:
+        txts = _xml_node_to_text(summary).strip()
 
-        if summary_text:
-            parts.append(summary_text)
-            parts.append("")
+        if txts:
+            parts.append(txts)
+            parts.append('')
 
     # PARAMS
-    params = root.findall("param")
+    params = root.findall('param')
     if params:
-        parts.append("Params:")
+        parts.append('*Params:*')
 
-        for p in params:
-            name = p.attrib.get("name", "").strip()
-            text = _xml_node_to_text(p).strip()
+        for param in params:
+            name = param.attrib.get('name', '').strip()
+            textp = _xml_node_to_text(param).strip()
 
             if name:
-                parts.append(f"  {name}: {text}")
+                parts.append(f'- {name}: {textp}')
             else:
-                parts.append(f"  {text}")
+                parts.append(f'- {textp}')
 
-        parts.append("")
+        parts.append('')
 
     # RETURNS
-    returns_el = root.find("returns")
-    if returns_el is not None:
-        returns_text = _xml_node_to_text(returns_el).strip()
+    returns = root.find('returns')
+    if returns is not None:
+        txtr = _xml_node_to_text(returns).strip()
 
-        if returns_text:
-            parts.append("Returns:")
-            parts.append(f"  {returns_text}")
-            parts.append("")
+        if txtr:
+            txtr = txtr.replace('- ', '')
+            parts.append('*Returns:*')
+            parts.append(f'- {txtr}')
+            parts.append('')
 
     # EXCEPTIONS
-    exceptions = root.findall("exception")
+    exceptions = root.findall('exception')
     if exceptions:
-        parts.append("Exceptions:")
+        parts.append('*Exceptions:*')
 
-        for ex in exceptions:
-            cref = ex.attrib.get("cref", "").strip().lstrip("T:") # Usually comes as T:Name
-            text = _xml_node_to_text(ex).strip()
+        for exception in exceptions:
+            cref = exception.attrib.get('cref', '').strip().lstrip('T:') # Usually comes as T:Name
+            texte = _xml_node_to_text(exception).strip()
 
             if cref:
-                parts.append(f"  {cref}: {text}")
+                parts.append(f'- {cref}: {texte}')
             else:
-                parts.append(f"  {text}")
+                parts.append(f'- {texte}')
 
-        parts.append("")
+        parts.append('')
 
     # Cleaning: remove any excess blank lines at the end
-    while parts and parts[-1] == "":
+    while parts and parts[-1] == '':
         parts.pop()
 
-    return "\n".join(parts)
+    return '\n'.join(parts)
 
 def _xml_node_to_text(node: ET.Element) -> str:
     """
@@ -279,15 +342,21 @@ def _xml_node_to_text(node: ET.Element) -> str:
         parts.append(node.text.strip())
 
     for child in node:
-        if child.tag == "see":
-            cref = child.attrib.get("cref", "").strip()
+        if child.tag == 'see':
+            cref = child.attrib.get('cref', '').strip()
             
             # Sometimes it comes as T:Namespace.Type
-            if ":" in cref:
-                cref = cref.split(":", 1)[-1]
+            if ':' in cref:
+                cref = cref.split(':', 1)[-1]
 
             if cref:
                 parts.append(cref)
+
+        elif child.tag == 'paramref':
+            name = child.attrib.get('name', '').strip()
+            
+            if name:
+                parts.append(name)
         else:
             text_child = _xml_node_to_text(child)
             
@@ -297,7 +366,45 @@ def _xml_node_to_text(node: ET.Element) -> str:
         if child.tail and child.tail.strip():
             parts.append(child.tail.strip())
 
-    return " ".join(parts)
+    return ' '.join(parts)
+
+def _collect_decorators(lines: List[str], start_idx: int) -> List[str]:
+    """
+    Extracts C#-style decorators (attributes) applied to a class, method, constructor or field.
+
+    The algorithm ascends from `start_idx`, collecting all immediately preceding documentation,
+    sorting it, and then parsing it as valid XML.
+
+    Args:
+        lines (List[str]):
+            The file content split into lines.
+        start_idx (int):
+            The 1-based index of the declaration line.
+
+    Returns:
+        List[str]:
+            List with all decorators found.
+    """
+    attrs = []
+    idx = start_idx - 1
+
+    while idx >= 0:
+        txt = lines[idx].rstrip()
+
+        if txt.strip().startswith('[') and txt.strip().endswith(']'):
+            attrs.append(txt.strip())
+            idx -= 1
+            continue
+
+        if txt.strip().startswith('///'):
+            idx -= 1
+            continue
+
+        break
+
+    attrs.reverse()
+
+    return attrs
 
 # ---------------------------------------------------------------------------------------------------------------------
 # END OF FILE

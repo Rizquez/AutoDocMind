@@ -7,10 +7,10 @@ from typing import TYPE_CHECKING
 # MODULES (INTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
 from src.analyzers import *
+from src.generators import *
 from src.utils.scan import scanner
 from helpers.trace import error_trace
 from settings.constants import ALGORITHM
-from src.generators import ReadmeGenerator, HtmlGenerator
 
 if TYPE_CHECKING:
     from settings.algorithm import Settings
@@ -50,15 +50,10 @@ def execute(settings: 'Settings') -> None:
             tb = traceback.extract_tb(line_error)
             error_trace(tb, logger, error)
 
-    logger.info("Generating README ...")
-    readme_txt = ReadmeGenerator.render(modules, settings.repository)
-    readme_target = ReadmeGenerator.write(readme_txt, settings.output)
-    logger.info(f"Ready README: {readme_target}")
-
-    logger.info("Generating HTML ...")
-    html_txt = HtmlGenerator.render(modules, settings.repository)
-    html_target = HtmlGenerator.write(html_txt, settings.output)
-    logger.info(f"Ready HTML: {html_target}")
+    logger.info(f"Generating README ...")
+    txt = Readme.render(modules, settings.repository)
+    target = Readme.write(txt, settings.output)
+    logger.info(f"Ready README: {target}")
 
 # ---------------------------------------------------------------------------------------------------------------------
 # END OF FILE

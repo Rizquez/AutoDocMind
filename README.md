@@ -1,4 +1,4 @@
-# 🤖 AutoDocMind - v.0.4.0
+# 🤖 AutoDocMind - v.0.7.0
 
 ## 🧾 Project description
 
@@ -27,17 +27,28 @@ Technical documentation often lags behind the pace of development, creating thre
 - Prepare a **release** and validate documentation and dependencies.
 - Perform automated **technical reviews** to identify *magic* functions or poorly cohesive modules.
 
-## 🛠️ Key features
+> [!IMPORTANT]
+> Supported programming languages: Python and C#.
 
-- Automatic analysis of projects in `Python` and `C#`.
-- Detection of classes, methods, and functions (depending on the language).
-- Obtaining the line where each element is declared.
-- Extraction of *docstrings* in Python.
-- Extraction and processing of *XML* documentation in C#.
-- Cleaning and uniform formatting of documentation before rendering.
-- Generation of documentation in `README.md`.
-- Generation of interactive `HTML` documentation with sidebar and collapsible sections.
-- `CLI` support for specifying *framework*, *repository*, *exclusions*, and *output folder*.
+## 🛠️ Key features (MVP)
+
+### First phase
+
+- Browse the repository filtering by a specific programming language.
+- Detection of documentation on classes, methods, decorators, and functions (depending on the language).
+- Generation of documentation in `README` file.
+
+> [!NOTE]
+> The README file is generated from the existing documentation in the code.
+
+<!-- ### MVP (Second phase)
+
+- Minimum metrics on the files.
+- Dependency map (import between modules).
+- Templates with Jinja2 for report generation.
+
+> [!IMPORTANT]
+> This phase is currently under development. -->
 
 ## 💽 Installation (Windows)
 
@@ -86,7 +97,7 @@ Where:
 - **framework:** Programming languages and frameworks supported by the algorithm.
 - **repository:** Directory of the repository that hosts the project.
 - **output (optional):** Directory where the generated files will be saved. If not specified, the folder where the files are stored will be created in the *root of this project*.
-- **excluded (optional):** Additional files y/o extensions to exclude from the scan, separated by commas if multiple are specified.
+- **excluded (optional):** Additional files and extensions to exclude from the scan, separated by commas if multiple are specified.
 
 > [!NOTE]
 > For more details about the parameters and execution arguments, see the file located at: *handlers/console.py*
@@ -102,20 +113,16 @@ AutoDocMind/
 ├── helpers
 │   ├── loggers.py
 │   └── trace.py
-├── public
-│   ├── styles
-│   │   └── main.css
-│   └── templates
-│       └── base.html
 ├── settings
 │   ├── algorithm.py
 │   └── constants.py
 ├── src
 │   ├── analyzers
-│   │   └── python.py
+│   │   ├── __init__.py
+│   │   ├── python.py
+│   │   └── csharp.py
 │   ├── generators
 │   │   ├── __init__.py
-│   │   ├── html.py
 │   │   └── readme.py
 │   ├── models
 │   │   └── structures.py
