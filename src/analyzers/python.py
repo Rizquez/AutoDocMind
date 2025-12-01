@@ -64,14 +64,16 @@ def analyze_python(path: Path) -> ModuleInfo:
                 FunctionInfo(
                     name=node.name,
                     lineno=node.lineno,
-                    doc=_normalize_document(ast.get_docstring(node))
+                    doc=_normalize_document(ast.get_docstring(node)),
+                    decorators=_collect_decorators(node, src)
                 )
             )
         elif isinstance(node, ast.ClassDef):
             cls = ClassInfo(
                 name=node.name,
                 lineno=node.lineno,
-                doc=_normalize_document(ast.get_docstring(node))
+                doc=_normalize_document(ast.get_docstring(node)),
+                decorators=_collect_decorators(node, src)
             )
 
             for sub in node.body:
@@ -79,19 +81,42 @@ def analyze_python(path: Path) -> ModuleInfo:
                     cls.methods.append(FunctionInfo(
                         name=sub.name,
                         lineno=sub.lineno,
-                        doc=_normalize_document(ast.get_docstring(sub))
+                        doc=_normalize_document(ast.get_docstring(sub)),
+                        decorators=_collect_decorators(sub, src)
                     ))
+
+                elif isinstance(sub, ast.Assign):
+                    for target in sub.targets:
+                        if isinstance(target, ast.Name):
+                            cls.attributes.append(
+                                AttributeInfo(
+                                    name=target.id,
+                                    lineno=sub.lineno,
+                                    doc=None,
+                                )
+                            )
+                elif isinstance(sub, ast.AnnAssign):
+                    if isinstance(sub.target, ast.Name):
+                        cls.attributes.append(
+                            AttributeInfo(
+                                name=sub.target.id,
+                                lineno=sub.lineno,
+                                doc=None,
+                            )
+                        )
+                else:
+                    pass
 
             classes.append(cls)
         else:
             node_type = type(node).__name__
-            lineno = getattr(node, "lineno", "?")
+            lineno = getattr(node, 'lineno', '?')
 
             # Short text representing the node
             # Limit length so as not to clutter the log
             try:
                 summary = ast.dump(node, annotate_fields=True, include_attributes=False)
-                summary = (summary[:120] + "...") if len(summary) > 120 else summary
+                summary = (summary[:120] + '...') if len(summary) > 120 else summary
             except Exception:
                 summary = str(node)
 
@@ -247,6 +272,41 @@ def _normalize_document(doc: Optional[str]) -> Optional[str]:
         idx += 1
 
     return '\n'.join(out)
+
+def _collect_decorators(node: ast.AST, src: str) -> List[str]:
+    """
+    Extracts the decorators applied to a function or class in Python code.
+
+    This function parses the AST node (`ast.AST`) corresponding to a function 
+    definition (`ast.FunctionDef`) or class definition (`ast.ClassDef`) and obtains 
+    the textual representation of each decorator as it appears in the source file.
+
+    Args:
+        node (ast.AST):
+            Node of the syntax tree that may contain decorators.
+        src (str):
+            Full content of the source file where the node is located.
+            Used to extract exact segments of the original text.
+
+    Returns:
+        List[str]:
+            List with all the decorators found, each represented as a string without the `@` prefix.
+            The order is preserved as it appears in the code.
+    """
+    decorators: List[str] = []
+
+    for deco in getattr(node, 'decorator_list', []):
+        text = ast.get_source_segment(src, deco)
+
+        if text is None:
+            try:
+                text = ast.unparse(deco) 
+            except Exception:
+                text = repr(deco)
+
+        decorators.append(text.lstrip('@').strip())
+
+    return decorators
 
 def _fix_bullets(doc: Optional[str]) -> Optional[str]:
     """
