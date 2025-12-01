@@ -67,7 +67,7 @@ class Readme:
                         if clss.doc:
                             lines.append(
                                 f'### 📜 Class: `{clss.name}`\n'
-                                f'{DocStrings.to_readme(clss.doc, cleaned=cleaned, tabulation=False)}\n'
+                                f'{DocStrings.to_readme(clss.doc, cleaned=cleaned)}\n'
                             )
                         else:
                             lines.append(f'### 📜 Class: `{clss.name}` - *{NO_CLASS}*\n')
@@ -80,7 +80,7 @@ class Readme:
                             if attr.doc:
                                 lines.append(
                                     f'#### 📌 *Attribute declared in line {attr.lineno}*: `{attr.name}`\n'
-                                    f'{DocStrings.to_readme(attr.doc, cleaned=cleaned, tabulation=False)}\n'
+                                    f'{DocStrings.to_readme(attr.doc, cleaned=cleaned)}\n'
                                 )
                             else:
                                 lines.append(
@@ -92,7 +92,7 @@ class Readme:
                             if meth.doc:
                                 lines.append(
                                     f'#### 🛠️ *Method declared in line {meth.lineno}*: `{meth.name}`\n'
-                                    f'{DocStrings.to_readme(meth.doc, cleaned=cleaned, tabulation=False)}\n'
+                                    f'{DocStrings.to_readme(meth.doc, cleaned=cleaned)}\n'
                                 )
                             else:
                                 lines.append(
@@ -112,7 +112,7 @@ class Readme:
                             lines.append(
                                 
                                 f'#### 🛠️ *Function declared in line {func.lineno}*: `{func.name}`\n'
-                                f'{DocStrings.to_readme(func.doc, cleaned=cleaned, tabulation=False)}\n'
+                                f'{DocStrings.to_readme(func.doc, cleaned=cleaned)}\n'
                             )
                         else:
                             lines.append(

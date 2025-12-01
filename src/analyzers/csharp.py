@@ -80,31 +80,35 @@ def analyze_csharp(path: Path) -> ModuleInfo:
 
     classes: List[ClassInfo] = []
 
-    # Search classes/records/structs/interfaces
     for cls_match in CLASS_RE.finditer(src):
         kind = cls_match.group(1)
         cls_name = cls_match.group(2)
         
-        # Calculate line (1-based)
         cls_start = cls_match.start()
         cls_lineno = src.count("\n", 0, cls_start) + 1
 
         cls_doc = _collect_xml_doc(lines, cls_lineno - 1)
         cls_decorators = _collect_decorators(lines, cls_lineno - 1)
-        cls_info = ClassInfo(name=f"{cls_name}", lineno=cls_lineno, doc=cls_doc, decorators=cls_decorators)
 
-        # Within the approximate block of that class, search for methods (simple heuristic)
+        cls_info = ClassInfo(
+            name=cls_name, 
+            lineno=cls_lineno, 
+            doc=cls_doc, 
+            decorators=cls_decorators
+        )
+
+        # Within the approximate block of that class, search for methods
         # Find the closest opening key and count keys to narrow down the block
-        open_brace_idx = src.find('{', cls_match.end())
-        if open_brace_idx == -1:
+        idx_brace = src.find('{', cls_match.end())
+        if idx_brace == -1:
             logger.warning(f"Could not find '{{' for {kind} {cls_name} in {path.name} (Line {cls_lineno})")
             classes.append(cls_info)
             continue
 
         # Count keys to delimit the block
         depth = 0
-        idx = open_brace_idx
-        end_idx = len(src)
+        idx = idx_brace
+        idx_end = len(src)
 
         while idx < len(src):
             if src[idx] == '{':
@@ -113,8 +117,10 @@ def analyze_csharp(path: Path) -> ModuleInfo:
                 depth -= 1
 
                 if depth == 0:
-                    end_idx = idx
+                    idx_end = idx
                     break
+            else:
+                logger.warning() # TODO
             idx += 1
 
         # Regular expression to detect constructor methods
@@ -125,10 +131,10 @@ def analyze_csharp(path: Path) -> ModuleInfo:
             re.MULTILINE
         )
 
-        class_block = src[open_brace_idx:end_idx]
+        class_block = src[idx_brace:idx_end]
 
         for ctor in CTOR_RE.finditer(class_block):
-            ctor_abs_start = open_brace_idx + ctor.start()
+            ctor_abs_start = idx_brace + ctor.start()
             ctor_lineno = src.count('\n', 0, ctor_abs_start) + 1
             ctor_doc = _collect_xml_doc(lines, ctor_lineno - 1)
 
@@ -142,7 +148,7 @@ def analyze_csharp(path: Path) -> ModuleInfo:
 
         for method in METHOD_RE.finditer(class_block):
             method_name = method.group(1)
-            method_abs_start = open_brace_idx + method.start()
+            method_abs_start = idx_brace + method.start()
             method_lineno = src.count('\n', 0, method_abs_start) + 1
             method_doc = _collect_xml_doc(lines, method_lineno - 1)
             method_decorators = _collect_decorators(lines, method_lineno - 1)
@@ -158,7 +164,7 @@ def analyze_csharp(path: Path) -> ModuleInfo:
 
         for attr in ATTRIBUTE_RE.finditer(class_block):
             attr_name = attr.group(1)
-            attr_abs_start = open_brace_idx + attr.start()
+            attr_abs_start = idx_brace + attr.start()
             attr_lineno = src.count('\n', 0, attr_abs_start) + 1
             attr_doc = _collect_xml_doc(lines, attr_lineno - 1)
 
@@ -255,12 +261,12 @@ def _collect_xml_doc(lines: List[str], start_idx: int) -> Optional[str]:
     parts: List[str] = []
 
     # SUMMARY
-    summary_el = root.find('summary')
-    if summary_el is not None:
-        summary_text = _xml_node_to_text(summary_el).strip()
+    summary = root.find('summary')
+    if summary is not None:
+        txts = _xml_node_to_text(summary).strip()
 
-        if summary_text:
-            parts.append(summary_text)
+        if txts:
+            parts.append(txts)
             parts.append('')
 
     # PARAMS
@@ -268,26 +274,26 @@ def _collect_xml_doc(lines: List[str], start_idx: int) -> Optional[str]:
     if params:
         parts.append('*Params:*')
 
-        for p in params:
-            name = p.attrib.get('name', '').strip()
-            text = _xml_node_to_text(p).strip()
+        for param in params:
+            name = param.attrib.get('name', '').strip()
+            textp = _xml_node_to_text(param).strip()
 
             if name:
-                parts.append(f'- {name}: {text}')
+                parts.append(f'- {name}: {textp}')
             else:
-                parts.append(f'- {text}')
+                parts.append(f'- {textp}')
 
         parts.append('')
 
     # RETURNS
-    returns_el = root.find('returns')
-    if returns_el is not None:
-        returns_text = _xml_node_to_text(returns_el).strip()
+    returns = root.find('returns')
+    if returns is not None:
+        txtr = _xml_node_to_text(returns).strip()
 
-        if returns_text:
-            returns_text = returns_text.replace('- ', '')
+        if txtr:
+            txtr = txtr.replace('- ', '')
             parts.append('*Returns:*')
-            parts.append(f'- {returns_text}')
+            parts.append(f'- {txtr}')
             parts.append('')
 
     # EXCEPTIONS
@@ -295,14 +301,14 @@ def _collect_xml_doc(lines: List[str], start_idx: int) -> Optional[str]:
     if exceptions:
         parts.append('*Exceptions:*')
 
-        for ex in exceptions:
-            cref = ex.attrib.get('cref', '').strip().lstrip('T:') # Usually comes as T:Name
-            text = _xml_node_to_text(ex).strip()
+        for exception in exceptions:
+            cref = exception.attrib.get('cref', '').strip().lstrip('T:') # Usually comes as T:Name
+            texte = _xml_node_to_text(exception).strip()
 
             if cref:
-                parts.append(f'- {cref}: {text}')
+                parts.append(f'- {cref}: {texte}')
             else:
-                parts.append(f'- {text}')
+                parts.append(f'- {texte}')
 
         parts.append('')
 
@@ -345,8 +351,10 @@ def _xml_node_to_text(node: ET.Element) -> str:
 
             if cref:
                 parts.append(cref)
+
         elif child.tag == 'paramref':
             name = child.attrib.get('name', '').strip()
+            
             if name:
                 parts.append(name)
         else:

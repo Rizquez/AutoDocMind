@@ -1,4 +1,4 @@
-# 🤖 AutoDocMind - v.0.5.0
+# 🤖 AutoDocMind - v.0.6.0
 
 ## 🧾 Project description
 
@@ -27,13 +27,28 @@ Technical documentation often lags behind the pace of development, creating thre
 - Prepare a **release** and validate documentation and dependencies.
 - Perform automated **technical reviews** to identify *magic* functions or poorly cohesive modules.
 
-## 🛠️ Key features
+> [!IMPORTANT]
+> Supported programming languages: Python and C#.
 
-- Automatic analysis of projects in `C#`.
-- Detection of classes, methods, decorators, and functions (depending on the language).
-- Cleaning and uniform formatting of documentation before rendering.
-- Generation of documentation in `README`.
-- `CLI` support for specifying options.
+## 🛠️ Key features (MVP)
+
+### First phase
+
+- Browse the repository filtering by a specific programming language.
+- Detection of documentation on classes, methods, decorators, and functions (depending on the language).
+- Generation of documentation in `README` file.
+
+> [!NOTE]
+> The README file is generated from the existing documentation in the code.
+
+<!-- ### MVP (Second phase)
+
+- Minimum metrics on the files.
+- Dependency map (import between modules).
+- Templates with Jinja2 for report generation.
+
+> [!IMPORTANT]
+> This phase is currently under development. -->
 
 ## 💽 Installation (Windows)
 
@@ -104,6 +119,7 @@ AutoDocMind/
 ├── src
 │   ├── analyzers
 │   │   ├── __init__.py
+│   │   ├── python.py
 │   │   └── csharp.py
 │   ├── generators
 │   │   ├── __init__.py
