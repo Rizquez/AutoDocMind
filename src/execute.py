@@ -51,8 +51,8 @@ def execute(settings: 'Settings') -> None:
             error_trace(tb, logger, error)
 
     logger.info(f"Generating README ...")
-    txt = Readme.render(modules, settings.repository)
-    target = Readme.write(txt, settings.output)
+    txt = render_readme(modules, settings.repository)
+    target = write_readme(txt, settings.output)
     logger.info(f"Ready README: {target}")
 
 # ---------------------------------------------------------------------------------------------------------------------

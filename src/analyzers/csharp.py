@@ -7,7 +7,7 @@ import logging, re, xml.etree.ElementTree as ET
 
 # MODULES (INTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
-from src.models.structures import *
+from src.models import *
 from settings.constants import ALGORITHM
 from src.utils.metrics import module_metrics
 # ---------------------------------------------------------------------------------------------------------------------

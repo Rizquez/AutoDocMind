@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING, List
 
 # MODULES (INTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
-from src.models.structures import ModuleMetrics
+from src.models import ModuleMetrics
 
 if TYPE_CHECKING:
-    from src.models.structures import ClassInfo, FunctionInfo
+    from src.models import ClassInfo, FunctionInfo
 # ---------------------------------------------------------------------------------------------------------------------
 
 # OPERATIONS / CLASS CREATION / GENERAL FUNCTIONS

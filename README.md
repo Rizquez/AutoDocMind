@@ -127,10 +127,13 @@ AutoDocMind/
 │   │   ├── readme.py
 │   │   └── report.py
 │   ├── models
-│   │   └── structures.py
+│   │   ├── __init__.py
+│   │   ├── entities.py
+│   │   └── module.py
 │   ├── utils
-│   │   ├── scan.py
-│   │   └── strings.py
+│   │   ├── docstrings.py
+│   │   ├── metrics.py
+│   │   └── scan.py
 │   └── execute.py
 ├── support
 │   └── base.docx
