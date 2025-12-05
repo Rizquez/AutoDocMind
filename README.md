@@ -139,8 +139,6 @@ AutoDocMind/
 │   │   ├── maps.py
 │   │   └── metrics.py
 │   └── execute.py
-├── support
-│   └── base.docx
 ├── .gitignore
 ├── LICENSE
 ├── main.py
