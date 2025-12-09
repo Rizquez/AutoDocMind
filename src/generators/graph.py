@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING, List, Dict, Set
 
 # MODULES (INTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
-from src.utils.graphics import *
 from src.utils.maps import *
+from src.utils.graphics import *
 
 if TYPE_CHECKING:
     from src.models import ModuleInfo
@@ -53,7 +53,7 @@ def generate_graph(
     """
     dep_map: Dict[str, Set] = _build_map(modules, repository, framework)
 
-    graph = map_to_graph(dep_map, format)
+    graph = map_to_graph(repository, dep_map, format)
 
     out = Path(output) / f'{GRAPH_FILE}.{format}'
 
