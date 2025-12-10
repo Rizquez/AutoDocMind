@@ -123,7 +123,7 @@ class HandlersLogger:
         Creates a `StreamHandler` to display logs directly on the console.
 
         Returns:
-            logging.StreamHandler:
+            StreamHandler:
                 Handler configured for standard output.
         """
         handler = logging.StreamHandler()

@@ -286,16 +286,16 @@ def _collect_decorators(node: ast.AST, src: str) -> List[str]:
     the textual representation of each decorator as it appears in the source file.
 
     Args:
-        node (ast.AST):
+        node (AST):
             Node of the syntax tree that may contain decorators.
         src (str):
             Full content of the source file where the node is located.
             Used to extract exact segments of the original text.
 
     Returns:
-        List[str]:
-            List with all the decorators found, each represented as a string without the `@` prefix.
-            The order is preserved as it appears in the code.
+        List:
+            List with all the decorators found, each represented as a string without 
+            the `@` prefix; the order is preserved as it appears in the code.
     """
     decorators: List[str] = []
 
@@ -317,11 +317,11 @@ def _collect_imports(tree: ast.AST) -> List[str]:
     Extracts all imports present in a Python module from its AST.
 
     Args:
-        tree (ast.AST):
+        tree (AST):
             The syntax tree of the file obtained using `ast.parse()`.
 
     Returns:
-        List[str]:
+        List:
             A single, ordered list containing all imported modules within the file.
     """
     imports: List[str] = []

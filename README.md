@@ -1,4 +1,4 @@
-# 🤖 AutoDocMind - v.0.9.1
+# 🤖 AutoDocMind - v.0.10.0
 
 ## 🧾 Project description
 
@@ -131,7 +131,7 @@ AutoDocMind/
 │   │   ├── entities.py
 │   │   └── module.py
 │   ├── tools
-│   │   ├── docstrings.py
+│   │   ├── docstring.py
 │   │   ├── fixers.py
 │   │   └── scanner.py
 │   ├── utils

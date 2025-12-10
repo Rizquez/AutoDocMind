@@ -77,9 +77,9 @@ def map_to_graph(repository: str, dep_map: Dict[str, Set[str]], format: str) -> 
         fontsize='44'
     )
 
-    all_path = _get_all_path(dep_map)
+    all_path = _all_path(dep_map)
 
-    id_map = _build_id_map(all_path)
+    id_map = _id_map(all_path)
 
     groups: Dict[str, List[str]] = {}
     for path in all_path:
@@ -127,7 +127,7 @@ def map_to_graph(repository: str, dep_map: Dict[str, Set[str]], format: str) -> 
 
     return dot
 
-def _get_all_path(dep_map: Dict[str, Set[str]]) -> List[str]:
+def _all_path(dep_map: Dict[str, Set[str]]) -> List[str]:
     """
     This function retrieves the complete list of module paths present in the dependency map.
 
@@ -143,7 +143,7 @@ def _get_all_path(dep_map: Dict[str, Set[str]]) -> List[str]:
             it depends.
 
     Returns:
-        List[str]: 
+        List: 
             Alphabetically ordered list with all the unique paths detected.
     """
     all_path = list(dep_map.keys())
@@ -153,7 +153,7 @@ def _get_all_path(dep_map: Dict[str, Set[str]]) -> List[str]:
 
     return sorted(set(all_path))
 
-def _build_id_map(all_path: List[str]) -> Dict[str, str]:
+def _id_map(all_path: List[str]) -> Dict[str, str]:
     """
     Build a dictionary that assigns an internal identifier to each module.
 

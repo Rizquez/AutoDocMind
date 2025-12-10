@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 __all__ = ['dependencies_map']
 
-def dependencies_map(modules: List['ModuleInfo'], paths: Dict[str, str]) -> Dict[str, Set]:
+def dependencies_map(modules: List['ModuleInfo'], paths: Dict[str, str]) -> Dict[str, Set[str]]:
     """
     Builds the actual dependency map between repository modules.
 
@@ -48,22 +48,23 @@ def dependencies_map(modules: List['ModuleInfo'], paths: Dict[str, str]) -> Dict
 
         for imp in module.imports:
             candidates: List[str] = []
-
             parts = imp.split('.')
 
-            while len(parts) > 0:
+            while parts:
                 candidates.append('.'.join(parts))
                 parts.pop()
 
-            path = None
+            target_paths: Set[str] = set()
+
             for candidate in candidates:
                 if candidate in paths:
-                    path = paths[candidate]
+                    target_paths = paths[candidate]
                     break
-            
-            if path and path != src:
-                dep_map[src].add(path)
-    
+
+            for path in target_paths:
+                if path and path != src:
+                    dep_map[src].add(path)
+
     return dep_map
 
 # ---------------------------------------------------------------------------------------------------------------------

@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 __all__ = ['Settings']
 
-OUTPUT_FOLDER = 'AutoDocMind-Output'
+FOLDER = 'AutoDocMind-Output'
 
 EXTENSIONS = {
     'python': {'.py'},
@@ -42,15 +42,15 @@ class Settings:
     """
 
     def __init__(self, args: 'Namespace') -> None:
-        self.__framework = args.framework
+        self.__framework = args.framework.lower()
         self.__repository = args.repository
         self.__excluded = self.__set_excluded(args.excluded)
-        self.__included = EXTENSIONS.get(self.__framework.lower(), set())
+        self.__included = EXTENSIONS.get(self.__framework, set())
 
         if args.output:
-            self.__output = os.path.join(args.output, OUTPUT_FOLDER)
+            self.__output = os.path.join(args.output, FOLDER)
         else:
-            self.__output = os.path.join(self.__get_root(), OUTPUT_FOLDER)
+            self.__output = os.path.join(self.__root(), FOLDER)
 
     @property
     def framework(self) -> str:
@@ -73,7 +73,7 @@ class Settings:
         return self.__output
     
     @staticmethod
-    def __get_root() -> str:
+    def __root() -> str:
         """
         This static method determines the absolute path of the current file, 
         removes the last directory level, and returns the resulting path.
@@ -97,7 +97,7 @@ class Settings:
                 String with the names of directories or files to exclude, separated by commas.
 
         Returns:
-            Set[str]:
+            Set:
                 Updated set of exclusions.
         """
         if excluded:

@@ -83,7 +83,7 @@ def _lines(doc: str) -> List[str]:
             Original text or docstring to be split.
 
     Returns:
-        List[str]:
+        List:
             List of lines obtained from the original text.
     """
     return doc.strip().splitlines()
