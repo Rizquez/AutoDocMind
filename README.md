@@ -1,4 +1,4 @@
-# 🤖 AutoDocMind - v.0.7.0
+# 🤖 AutoDocMind - v.0.10.1
 
 ## 🧾 Project description
 
@@ -108,14 +108,14 @@ The main files are organized into:
 
 ```
 AutoDocMind/
+├── configuration
+│   ├── constants.py
+│   └── settings.py
 ├── handlers
-│   └── console.py
+│   ├── arguments.py
+│   └── logger.py
 ├── helpers
-│   ├── loggers.py
-│   └── trace.py
-├── settings
-│   ├── algorithm.py
-│   └── constants.py
+│   └── traces.py
 ├── src
 │   ├── analyzers
 │   │   ├── __init__.py
@@ -123,12 +123,21 @@ AutoDocMind/
 │   │   └── csharp.py
 │   ├── generators
 │   │   ├── __init__.py
-│   │   └── readme.py
+│   │   ├── graphic.py
+│   │   ├── readme.py
+│   │   └── report.py
 │   ├── models
-│   │   └── structures.py
+│   │   ├── __init__.py
+│   │   ├── entities.py
+│   │   └── module.py
+│   ├── tools
+│   │   ├── docstring.py
+│   │   ├── fixers.py
+│   │   └── scanner.py
 │   ├── utils
-│   │   ├── scan.py
-│   │   └── strings.py
+│   │   ├── maps.py
+│   │   ├── paths.py
+│   │   └── metrics.py
 │   └── execute.py
 ├── .gitignore
 ├── LICENSE

@@ -17,14 +17,14 @@ if TYPE_CHECKING:
 
 __all__ = ['Settings']
 
-OUTPUT_FOLDER = 'AutoDocMind-Output'
+FOLDER = 'AutoDocMind-Output'
 
 EXTENSIONS = {
     'python': {'.py'},
     'csharp': {'.cs'}
 }
 
-EXCLUDED: Set[str] = {
+EXCLUDED = {
     '.git', '.hg', '.svn', '.idea', '.vscode', '.ruff_cache', '.mypy_cache', '.pytest_cache', '.tox', '.eggs', 
     '__pycache__', 'build', 'dist', 'site-packages', 'node_modules', 'venv', '.venv', 'env', '.env', 'bin', 'obj',
     'Debug', 'Release', '.vs'
@@ -42,15 +42,15 @@ class Settings:
     """
 
     def __init__(self, args: 'Namespace') -> None:
-        self.__framework: str = args.framework
-        self.__repository: str = args.repository
-        self.__excluded: Set[str] = self.__set_excluded(args.excluded)
-        self.__included: Set[str] = EXTENSIONS.get(self.__framework.lower(), set())
+        self.__framework = args.framework.lower()
+        self.__repository = args.repository
+        self.__excluded = self.__set_excluded(args.excluded)
+        self.__included = EXTENSIONS.get(self.__framework, set())
 
         if args.output:
-            self.__output = os.path.join(args.output, OUTPUT_FOLDER)
+            self.__output = os.path.join(args.output, FOLDER)
         else:
-            self.__output = os.path.join(self.__get_root(), OUTPUT_FOLDER)
+            self.__output = os.path.join(self.__root(), FOLDER)
 
     @property
     def framework(self) -> str:
@@ -59,7 +59,7 @@ class Settings:
     @property
     def repository(self) -> str:
         return self.__repository
-    
+
     @property
     def excluded(self) -> Set[str]:
         return self.__excluded
@@ -73,7 +73,7 @@ class Settings:
         return self.__output
     
     @staticmethod
-    def __get_root() -> str:
+    def __root() -> str:
         """
         This static method determines the absolute path of the current file, 
         removes the last directory level, and returns the resulting path.
@@ -97,7 +97,7 @@ class Settings:
                 String with the names of directories or files to exclude, separated by commas.
 
         Returns:
-            Set[str]:
+            Set:
                 Updated set of exclusions.
         """
         if excluded:

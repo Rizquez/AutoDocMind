@@ -5,9 +5,8 @@
 
 # MODULES (INTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
-from .graphic import *
-from .readme import *
-from .report import *
+from .entities import *
+from .module import *
 # ---------------------------------------------------------------------------------------------------------------------
 
 # OPERATIONS / CLASS CREATION / GENERAL FUNCTIONS

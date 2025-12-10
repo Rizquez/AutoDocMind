@@ -7,8 +7,9 @@ import logging, re, xml.etree.ElementTree as ET
 
 # MODULES (INTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
-from src.models.structures import *
-from settings.constants import ALGORITHM
+from src.models import *
+from src.utils.metrics import module_metrics
+from configuration.constants import ALGORITHM
 # ---------------------------------------------------------------------------------------------------------------------
 
 # OPERATIONS / CLASS CREATION / GENERAL FUNCTIONS
@@ -46,6 +47,20 @@ ATTRIBUTE_RE = re.compile(
     re.MULTILINE
 )
 
+# Regular expression to detect using directives
+USING_RE = re.compile(
+    r'^\s*(?:global\s+)?using\s+(?:static\s+)?'
+    r'(?:[A-Za-z_][A-Za-z0-9_]*\s*=\s*)?'
+    r'([A-Za-z_][A-Za-z0-9_.]*)\s*;',
+    re.MULTILINE
+)
+
+# Regular expression to detect namespaces
+NAMESPACE_RE = re.compile(
+    r'^\s*namespace\s+([A-Za-z_][A-Za-z0-9_.]*)\s*(?:{|;)',
+    re.MULTILINE
+)
+
 def analyze_csharp(path: Path) -> ModuleInfo:
     """
     Analyzes a C# file and extracts structural information about its classes and methods.
@@ -76,6 +91,7 @@ def analyze_csharp(path: Path) -> ModuleInfo:
             Object with all the structural and documentary information of the C# file.
     """
     src = path.read_text(encoding='utf-8', errors='ignore')
+    src = src.lstrip('\ufeff')
     lines = src.splitlines()
 
     classes: List[ClassInfo] = []
@@ -87,7 +103,7 @@ def analyze_csharp(path: Path) -> ModuleInfo:
         cls_start = cls_match.start()
         cls_lineno = src.count("\n", 0, cls_start) + 1
 
-        cls_doc = _collect_xml_doc(lines, cls_lineno - 1)
+        cls_doc = _collect_xml_text(lines, cls_lineno - 1)
         cls_decorators = _collect_decorators(lines, cls_lineno - 1)
 
         cls_info = ClassInfo(
@@ -120,7 +136,8 @@ def analyze_csharp(path: Path) -> ModuleInfo:
                     idx_end = idx
                     break
             else:
-                logger.warning() # TODO
+                pass
+            
             idx += 1
 
         # Regular expression to detect constructor methods
@@ -136,7 +153,7 @@ def analyze_csharp(path: Path) -> ModuleInfo:
         for ctor in CTOR_RE.finditer(class_block):
             ctor_abs_start = idx_brace + ctor.start()
             ctor_lineno = src.count('\n', 0, ctor_abs_start) + 1
-            ctor_doc = _collect_xml_doc(lines, ctor_lineno - 1)
+            ctor_doc = _collect_xml_text(lines, ctor_lineno - 1)
 
             cls_info.methods.append(
                 FunctionInfo(
@@ -150,7 +167,7 @@ def analyze_csharp(path: Path) -> ModuleInfo:
             method_name = method.group(1)
             method_abs_start = idx_brace + method.start()
             method_lineno = src.count('\n', 0, method_abs_start) + 1
-            method_doc = _collect_xml_doc(lines, method_lineno - 1)
+            method_doc = _collect_xml_text(lines, method_lineno - 1)
             method_decorators = _collect_decorators(lines, method_lineno - 1)
 
             cls_info.methods.append(
@@ -166,7 +183,7 @@ def analyze_csharp(path: Path) -> ModuleInfo:
             attr_name = attr.group(1)
             attr_abs_start = idx_brace + attr.start()
             attr_lineno = src.count('\n', 0, attr_abs_start) + 1
-            attr_doc = _collect_xml_doc(lines, attr_lineno - 1)
+            attr_doc = _collect_xml_text(lines, attr_lineno - 1)
 
             cls_info.attributes.append(
                 AttributeInfo(
@@ -182,10 +199,12 @@ def analyze_csharp(path: Path) -> ModuleInfo:
         path=str(path),
         doc=None,           # C# does not have module docstrings
         functions=[],       # In C#, there are no typical top-level functions, it is left empty
-        classes=classes
+        classes=classes,
+        imports=_collect_imports(src),
+        metrics=module_metrics(src, classes, [])
     )
 
-def _collect_xml_doc(lines: List[str], start_idx: int) -> Optional[str]:
+def _collect_xml_text(lines: List[str], start_idx: int) -> Optional[str]:
     """
     Extracts, interprets, and converts XML documentation preceding a class or method.
 
@@ -195,11 +214,11 @@ def _collect_xml_doc(lines: List[str], start_idx: int) -> Optional[str]:
     sorting it, and then parsing it as valid XML.
 
     **The function:**
-        - Detects <summary>
-        - Detects <param name="x">
-        - Detects <returns>
-        - Detects <exception cref="X">
-        - Converts <see cref="X"/> nodes to plain text (X)
+        - Detects `<summary>`
+        - Detects `<param name="x">`
+        - Detects `<returns>`
+        - Detects `<exception cref="X">`
+        - Converts `<see cref="X"/>` nodes to plain text (X)
         - Generates a structured block of readable text
 
     If the block is not valid XML or does not contain relevant tags, it is returned as is.
@@ -212,7 +231,7 @@ def _collect_xml_doc(lines: List[str], start_idx: int) -> Optional[str]:
             Index where the class or method appears, used to search documentation upwards.
 
     Returns:
-        Optional[str]:
+        (str | None):
             Processed and cleaned text from the documentation, or None if there is no associated documentation.
     """
     idx = start_idx - 1
@@ -329,7 +348,7 @@ def _xml_node_to_text(node: ET.Element) -> str:
         - Respects the content before, between, and after child nodes.
 
     Args:
-        node (ET.Element):
+        node (Element[str]):
             XML node to be transformed.
 
     Returns:
@@ -382,10 +401,10 @@ def _collect_decorators(lines: List[str], start_idx: int) -> List[str]:
             The 1-based index of the declaration line.
 
     Returns:
-        List[str]:
+        List:
             List with all decorators found.
     """
-    attrs = []
+    attrs: List[str] = []
     idx = start_idx - 1
 
     while idx >= 0:
@@ -405,6 +424,39 @@ def _collect_decorators(lines: List[str], start_idx: int) -> List[str]:
     attrs.reverse()
 
     return attrs
+
+def _collect_imports(src: str) -> List[str]:
+    """
+    Extracts declared namespaces and imported namespaces within a C# file.
+
+    This function analyzes the entire contents of the source file using predefined 
+    regular expressions and returns a homogeneous collection representing both the 
+    file's own namespaces and external dependencies declared using `using`.
+
+    Its purpose is to unify information related to dependency resolution at the module 
+    level, leaving the file's own namespaces explicitly marked for later identification.
+
+    Args:
+        src(str):
+            Complete contents of the C# file in text format.
+
+    Returns:
+        List:
+            Ordered list, without duplicates, of all namespaces imported 
+            using `using` statements.
+    """
+    src = src.lstrip('\ufeff')
+
+    namespaces = sorted({module.group(1) for module in NAMESPACE_RE.finditer(src)})
+    usings = sorted({module.group(1) for module in USING_RE.finditer(src)})
+
+    imports: List[str] = []
+    for ns in namespaces:
+        imports.append(f"__ns__:{ns}")
+
+    imports.extend(usings)
+
+    return imports
 
 # ---------------------------------------------------------------------------------------------------------------------
 # END OF FILE

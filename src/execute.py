@@ -1,19 +1,20 @@
 # MODULES (EXTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
 import sys, traceback, logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 # ---------------------------------------------------------------------------------------------------------------------
 
 # MODULES (INTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
 from src.analyzers import *
 from src.generators import *
-from src.utils.scan import scanner
-from helpers.trace import error_trace
-from settings.constants import ALGORITHM
+from src.tools.scanner import scanner
+from helpers.traces import error_trace
+from configuration.constants import ALGORITHM
 
 if TYPE_CHECKING:
-    from settings.algorithm import Settings
+    from src.models import ModuleInfo
+    from configuration.settings import Settings
 # ---------------------------------------------------------------------------------------------------------------------
 
 # OPERATIONS / CLASS CREATION / GENERAL FUNCTIONS
@@ -33,7 +34,8 @@ def execute(settings: 'Settings') -> None:
     **This function coordinates all stages of the AutoDocMind process:**
         1. Scans the specified repository for files in the supported language.
         2. Analyzes each file found to extract its structure (classes, functions, and docstrings).
-        3. Generates a `README` file with the consolidated documentation.
+        3. Generates a README file with the consolidated documentation.
+        4. Generates a visual dependency graph between modules.
     """
     logger.info(f"Scanning repository: {settings.repository}")
     files = list(scanner(settings.repository, settings.included, settings.excluded))
@@ -41,7 +43,7 @@ def execute(settings: 'Settings') -> None:
     
     method = globals().get(f'analyze_{settings.framework}')
 
-    modules = []
+    modules: List['ModuleInfo'] = []
     for file in files:
         try:
             modules.append(method(file))
@@ -51,9 +53,13 @@ def execute(settings: 'Settings') -> None:
             error_trace(tb, logger, error)
 
     logger.info(f"Generating README ...")
-    txt = Readme.render(modules, settings.repository)
-    target = Readme.write(txt, settings.output)
-    logger.info(f"Ready README: {target}")
+    txt = render_readme(modules, settings.repository)
+    target = write_readme(txt, settings.output)
+    logger.info(f"README generated: {target}")
+
+    logger.info("Generating dependency graph ...")
+    path = render_graphic(modules, settings.output, settings.repository, settings.framework)
+    logger.info(f"Dependency graph generated: {path}")
 
 # ---------------------------------------------------------------------------------------------------------------------
 # END OF FILE

@@ -7,8 +7,10 @@ from typing import List, Tuple, Optional
 
 # MODULES (INTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
-from settings.constants import ALGORITHM
-from src.models.structures import FunctionInfo, ClassInfo, ModuleInfo, AttributeInfo
+from src.models import *
+from src.utils.metrics import module_metrics
+from configuration.constants import ALGORITHM
+from src.tools.fixers import fix_asterisk, fix_bullets
 # ---------------------------------------------------------------------------------------------------------------------
 
 # OPERATIONS / CLASS CREATION / GENERAL FUNCTIONS
@@ -126,7 +128,9 @@ def analyze_python(path: Path) -> ModuleInfo:
         path=str(path),
         doc=doc,
         functions=funcs,
-        classes=classes
+        classes=classes,
+        imports=_collect_imports(tree),
+        metrics=module_metrics(src, classes, funcs)
     )
 
 def _normalize_document(doc: Optional[str]) -> Optional[str]:
@@ -144,7 +148,7 @@ def _normalize_document(doc: Optional[str]) -> Optional[str]:
     **And apply a uniform format using:**
         - "*Args:*", "*Returns:*" and "*Raises:*"
         - Bullets with `- name: description`
-        - Clean up asterisks and normalize bullets using `_fix_bullets` and `_fix_asterisk`.
+        - Clean up asterisks and normalize bullets using `fix_bullets` and `fix_asterisk`.
 
     **Additionally:**
         - Supports multiline descriptions.
@@ -264,8 +268,8 @@ def _normalize_document(doc: Optional[str]) -> Optional[str]:
 
             continue
 
-        line_fixed = _fix_bullets(line)
-        line_fixed = _fix_asterisk(line_fixed)
+        line_fixed = fix_bullets(line)
+        line_fixed = fix_asterisk(line_fixed)
 
         out.append(line_fixed)
 
@@ -282,16 +286,16 @@ def _collect_decorators(node: ast.AST, src: str) -> List[str]:
     the textual representation of each decorator as it appears in the source file.
 
     Args:
-        node (ast.AST):
+        node (AST):
             Node of the syntax tree that may contain decorators.
         src (str):
             Full content of the source file where the node is located.
             Used to extract exact segments of the original text.
 
     Returns:
-        List[str]:
-            List with all the decorators found, each represented as a string without the `@` prefix.
-            The order is preserved as it appears in the code.
+        List:
+            List with all the decorators found, each represented as a string without 
+            the `@` prefix; the order is preserved as it appears in the code.
     """
     decorators: List[str] = []
 
@@ -308,58 +312,35 @@ def _collect_decorators(node: ast.AST, src: str) -> List[str]:
 
     return decorators
 
-def _fix_bullets(doc: Optional[str]) -> Optional[str]:
+def _collect_imports(tree: ast.AST) -> List[str]:
     """
-    Normalizes bullets in multiline text.
-
-    This method detects lines that begin with `-` or `*` and unifies them, 
-    converting them into standard hyphenated bullets (`-`). It is used to 
-    clean up docstrings and ensure consistent formatting in Markdown.
+    Extracts all imports present in a Python module from its AST.
 
     Args:
-        doc(str | None):
-            Original text to process. Can contain one or more lines.
+        tree (AST):
+            The syntax tree of the file obtained using `ast.parse()`.
 
     Returns:
-        (str | None):
-            The text with normalized bullets, or the original value if `doc` is None.
+        List:
+            A single, ordered list containing all imported modules within the file.
     """
-    if not doc:
-        return doc
+    imports: List[str] = []
 
-    lines = doc.splitlines()
-    fixed = []
-
-    for line in lines:
-        stripped = line.lstrip()
-
-        if stripped.startswith('- ') or stripped.startswith('* '):
-            fixed.append(f'- {stripped[2:].strip()}')
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                imports.append(alias.name)
+        elif isinstance(node, ast.ImportFrom):
+            module = node.module or ''
+            for alias in node.names:
+                if module:
+                    imports.append(f'{module}.{alias.name}')
+                else:
+                    imports.append(alias.name)
         else:
-            fixed.append(line)
+            pass
 
-    return '\n'.join(fixed)
-
-def _fix_asterisk(doc: Optional[str]) -> Optional[str]:
-    """
-    Removes all asterisks from the text.
-
-    Used to clean up docstrings from formats that use `*` 
-    as part of the markup and that should not appear in 
-    the final Markdown.
-
-    Args:
-        doc(str | None):
-            Original text that may contain asterisks.
-
-    Returns:
-        (str | None):
-            Text without asterisks, or the original value if `doc` is None.
-    """
-    if not doc:
-        return doc
-    
-    return doc.replace('*', '')
+    return sorted(set(imports))
 
 # ---------------------------------------------------------------------------------------------------------------------
 # END OF FILE
