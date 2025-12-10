@@ -12,11 +12,11 @@ if TYPE_CHECKING:
 # OPERATIONS / CLASS CREATION / GENERAL FUNCTIONS
 # ---------------------------------------------------------------------------------------------------------------------
 
-__all__ = ['python_map']
+__all__ = ['build_map']
 
-def python_map(modules: List['ModuleInfo'], paths: Dict[str, str]) -> Dict[str, Set]:
+def build_map(modules: List['ModuleInfo'], paths: Dict[str, str]) -> Dict[str, Set]:
     """
-    Builds the actual dependency map between Python modules.
+    Builds the actual dependency map between repository modules.
 
     This method analyzes all the imports declared by each module and determines, based on 
     the provided path dictionary, which physical module each import belongs to.

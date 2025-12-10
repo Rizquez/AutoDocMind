@@ -58,7 +58,7 @@ def execute(settings: 'Settings') -> None:
     logger.info(f"README generated: {target}")
 
     logger.info("Generating dependency graph ...")
-    path = generate_graph(modules, settings.output, settings.repository, settings.framework)
+    path = generate_graph(modules, settings.output, settings.repository)
     logger.info(f"Dependency graph generated: {path}")
 
 # ---------------------------------------------------------------------------------------------------------------------
