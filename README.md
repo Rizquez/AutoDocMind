@@ -139,6 +139,8 @@ AutoDocMind/
 │   │   ├── paths.py
 │   │   └── metrics.py
 │   └── execute.py
+├── templates
+│   └── report.docx
 ├── .gitignore
 ├── LICENSE
 ├── main.py
