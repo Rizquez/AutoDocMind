@@ -1,18 +1,18 @@
 # MODULES (EXTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
-from typing import List, Optional
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from typing import List, Dict, Union
 # ---------------------------------------------------------------------------------------------------------------------
 
 # MODULES (INTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
-from src.models import ClassInfo, FunctionInfo
+# Get listed here!
 # ---------------------------------------------------------------------------------------------------------------------
 
 # OPERATIONS / CLASS CREATION / GENERAL FUNCTIONS
 # ---------------------------------------------------------------------------------------------------------------------
 
-__all__ = ['ModuleMetrics', 'ModuleInfo']
+__all__ = ['ModuleMetrics', 'RepositoryMetrics']
 
 @dataclass
 class ModuleMetrics:
@@ -38,30 +38,26 @@ class ModuleMetrics:
     n_methods: int
 
 @dataclass
-class ModuleInfo:
+class RepositoryMetrics:
     """
-    Represents the analyzed structure of a source code file or module.
-
+    # TODO: Documentar
+    
     Attributes:
-        path (str):
-            Full path to the file that was analyzed.
-        doc (str, optional):
-            Docstring of the module, if defined at the beginning of the file.
-        functions (List[FunctionInfo]):
-            List of functions defined at the module level.
-        classes (List[ClassInfo]):
-            List of classes found in the module, including their internal methods.
-        imports(List[str]):
-            List of imports on the module.
-        metrics (ModuleMetrics, optional):
-            Metrics associated with the module.
+        loc (int):
+        sloc (int):
+        class_percent (Union[float, int]):
+        method_percent (Union[float, int]):
+        attribute_percent (Union[float, int]):
+        module_stats (List[Dict[str, Union[str, int]]]):
+        modules_overview (List[Dict[str, Union[str, int]]]):
     """
-    path: str
-    doc: Optional[str]
-    functions: List[FunctionInfo]
-    classes: List[ClassInfo]
-    imports: List[str] = field(default_factory=list)
-    metrics: Optional[ModuleMetrics] = None
-
+    loc: int
+    sloc: int
+    class_percent: Union[float, int]
+    method_percent: Union[float, int]
+    attribute_percent: Union[float, int]
+    module_stats: List[Dict[str, Union[str, int]]]
+    modules_overview: List[Dict[str, Union[str, int]]]
+    
 # ---------------------------------------------------------------------------------------------------------------------
 # END OF FILE

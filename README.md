@@ -1,4 +1,4 @@
-# 🤖 AutoDocMind - v.0.12.0
+# 🤖 AutoDocMind - v.0.13.0
 
 ## 🧾 Project description
 
@@ -112,7 +112,6 @@ AutoDocMind/
 │   ├── analyzers
 │   │   ├── __init__.py
 │   │   ├── csharp.py
-│   │   ├── modules.py
 │   │   └── python.py
 │   ├── generators
 │   │   ├── __init__.py
@@ -122,8 +121,7 @@ AutoDocMind/
 │   ├── models
 │   │   ├── __init__.py
 │   │   ├── entities.py
-│   │   ├── module.py
-│   │   └── report.py
+│   │   └── metrics.py
 │   ├── tools
 │   │   ├── docstring.py
 │   │   ├── fixers.py

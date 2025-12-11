@@ -6,8 +6,7 @@
 # MODULES (INTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
 from .entities import *
-from .module import *
-from .report import *
+from .metrics import *
 # ---------------------------------------------------------------------------------------------------------------------
 
 # OPERATIONS / CLASS CREATION / GENERAL FUNCTIONS

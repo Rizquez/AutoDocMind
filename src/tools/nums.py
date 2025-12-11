@@ -13,26 +13,27 @@ from typing import Union
 
 __all__ = ['percentage']
 
-def percentage(amount: int, total: int, * , factor: int = 2) -> Union[float, int]:
+def percentage(part: int, total: int, * , factor: int = 2) -> Union[float, int]:
     """
-    Calculate the percentage that `amount` represents of `total`.
+    Calculate the percentage that `part` represents of `total`.
 
     Args:
-        amount (int):
+        part (int):
             The part value to compare against the total.
         total (int):
             The total or whole used as the denominator.
         factor (int, optional):
-            The number of decimal places to which the result will be rounded (if applicable).
+            The number of decimal places to which the result 
+            will be rounded (if applicable).
 
     Returns:
         (float | int):
-            The percentage value, rounded to the specified number of decimal places.
+            The percentage value.
     """
     if total == 0:
         return 0.0
     
-    num = round((amount / total) * 100, factor)
+    num = round((part / total) * 100, factor)
 
     return int(num) if num.is_integer() else num
 
