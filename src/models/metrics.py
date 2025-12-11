@@ -40,16 +40,23 @@ class ModuleMetrics:
 @dataclass
 class RepositoryMetrics:
     """
-    # TODO: Documentar
+    Contains the overall metrics obtained from the analysis of a repository.
     
     Attributes:
         loc (int):
+            Total number of lines in the file, including comments, blank lines, and code.
         sloc (int):
+            Number of meaningful lines in the file, excluding comments and blank lines.
         class_percent (Union[float, int]):
+            Percentage of documented classes out of the total.
         method_percent (Union[float, int]):
+            Percentage of documented methods out of the total.
         attribute_percent (Union[float, int]):
+            Percentage of documented attributes out of the total.
         module_stats (List[Dict[str, Union[str, int]]]):
+            List with detailed statistics by module.
         modules_overview (List[Dict[str, Union[str, int]]]):
+            Basic summary by module: LOC, SLOC, number of classes, methods, etc.
     """
     loc: int
     sloc: int

@@ -13,7 +13,7 @@ from typing import Union
 
 __all__ = ['percentage']
 
-def percentage(part: int, total: int, * , factor: int = 2) -> Union[float, int]:
+def percentage(part: int, total: int, *, factor: int = 2) -> Union[float, int]:
     """
     Calculate the percentage that `part` represents of `total`.
 

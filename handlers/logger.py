@@ -50,11 +50,14 @@ class HandlersLogger:
 
         logger = logging.getLogger(ALGORITHM)
         if logger.handlers: 
-            return # Avoid duplicating handlers if they have already been configured
-        
-        # The file only saves INFO/ERROR/WARNING, even if the logger accepts DEBUG
+            return
+
         logger.setLevel(logging.DEBUG)
+
+        # Prevents messages from being sent to the root logger 
+        # so that they are not duplicated in other handlers
         logger.propagate = False
+
         logger.addHandler(cls.__handler(file))
         logger.addHandler(cls.__stream_handler())
         
@@ -109,7 +112,7 @@ class HandlersLogger:
             maxBytes=size, 
             backupCount=backup, 
             encoding=encoding,
-            delay=True # The file is created only when the first log is written
+            delay=True # It does not open the file until the first message is written
         )
 
         handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)s] %(message)s'))
@@ -128,7 +131,7 @@ class HandlersLogger:
         """
         handler = logging.StreamHandler()
         handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)s] %(message)s'))
-        handler.setLevel(logging.DEBUG) # Console will display DEBUG (more detailed than the file)
+        handler.setLevel(logging.DEBUG)
 
         return handler
 

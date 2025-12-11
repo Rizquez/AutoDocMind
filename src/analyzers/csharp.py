@@ -12,6 +12,54 @@ from common.constants import ALGORITHM
 from src.utils.metrics import module_metrics
 # ---------------------------------------------------------------------------------------------------------------------
 
+# MAIN PARSING REGEXES
+# ---------------------------------------------------------------------------------------------------------------------
+# IMPORTANT:
+#   These regular expressions cover the most common cases of C# syntax, 
+#   but they are not a substitute for a formal parser, if false positives 
+#   or negatives appear in large projects, this is where you should adjust 
+#   the logic
+
+# Detects definitions of classes, interfaces, records, and structs
+CLASS_RE = re.compile(
+    r'^\s*(?:public|internal|protected|private)?\s*'
+    r'(?:abstract|sealed|static|partial)?\s*'
+    r'(class|record|struct|interface)\s+([A-Za-z_][A-Za-z0-9_]*)\b',
+    re.MULTILINE
+)
+
+# Detects methods within the body of a class
+METHOD_RE = re.compile(
+    r'^\s*(?:public|private|protected|internal)\s*'
+    r'(?:static\s+|virtual\s+|override\s+|async\s+|sealed\s+|partial\s+)*'
+    r'[\w<>\[\],\s]+\s+([A-Za-z_][A-Za-z0-9_]*)\s*\([^)]*\)\s*{?',
+    re.MULTILINE
+)
+
+# Detects attributes/properties
+ATTRIBUTE_RE = re.compile(
+    r'^\s*(?:public|private|protected|internal)\s*'
+    r'(?:static\s+|readonly\s+|const\s+)?'
+    r'[\w<>\[\],\s]+\s+([A-Za-z_][A-Za-z0-9_]*)\s*'
+    r'(?:{[^}]*}|=>|=|;)',
+    re.MULTILINE
+)
+
+# Detect using (includes global and alias)
+USING_RE = re.compile(
+    r'^\s*(?:global\s+)?using\s+(?:static\s+)?'
+    r'(?:[A-Za-z_][A-Za-z0-9_]*\s*=\s*)?'
+    r'([A-Za-z_][A-Za-z0-9_.]*)\s*;',
+    re.MULTILINE
+)
+
+# Detect file namespace
+NAMESPACE_RE = re.compile(
+    r'^\s*namespace\s+([A-Za-z_][A-Za-z0-9_.]*)\s*(?:{|;)',
+    re.MULTILINE
+)
+# ---------------------------------------------------------------------------------------------------------------------
+
 # OPERATIONS / CLASS CREATION / GENERAL FUNCTIONS
 # ---------------------------------------------------------------------------------------------------------------------
 
@@ -22,65 +70,22 @@ logger = logging.getLogger(ALGORITHM)
 Instance of the logger used by the analysis module.
 """
 
-# Regular expression to detect classes, interfaces, records and structs
-CLASS_RE = re.compile(
-    r'^\s*(?:public|internal|protected|private)?\s*'
-    r'(?:abstract|sealed|static|partial)?\s*'
-    r'(class|record|struct|interface)\s+([A-Za-z_][A-Za-z0-9_]*)\b',
-    re.MULTILINE
-)
-
-# Regular expression to detect methods within the body of a class
-METHOD_RE = re.compile(
-    r'^\s*(?:public|private|protected|internal)\s*'
-    r'(?:static\s+|virtual\s+|override\s+|async\s+|sealed\s+|partial\s+)*'
-    r'[\w<>\[\],\s]+\s+([A-Za-z_][A-Za-z0-9_]*)\s*\([^)]*\)\s*{?',
-    re.MULTILINE
-)
-
-# Regular expression to detect fields/properties in a class
-ATTRIBUTE_RE = re.compile(
-    r'^\s*(?:public|private|protected|internal)\s*'
-    r'(?:static\s+|readonly\s+|const\s+)?'
-    r'[\w<>\[\],\s]+\s+([A-Za-z_][A-Za-z0-9_]*)\s*'
-    r'(?:{[^}]*}|=>|=|;)',
-    re.MULTILINE
-)
-
-# Regular expression to detect using directives
-USING_RE = re.compile(
-    r'^\s*(?:global\s+)?using\s+(?:static\s+)?'
-    r'(?:[A-Za-z_][A-Za-z0-9_]*\s*=\s*)?'
-    r'([A-Za-z_][A-Za-z0-9_.]*)\s*;',
-    re.MULTILINE
-)
-
-# Regular expression to detect namespaces
-NAMESPACE_RE = re.compile(
-    r'^\s*namespace\s+([A-Za-z_][A-Za-z0-9_.]*)\s*(?:{|;)',
-    re.MULTILINE
-)
-
 def analyze_csharp(path: Path) -> ModuleInfo:
     """
-    Analyzes a C# file and extracts structural information about its classes and methods.
+    Analyzes a C# file, obtaining structural information: classes, methods, attributes, 
+    XML documentation, and metrics.
 
-    **What this parser extracts:**
-        - Classes, records, structs, and interfaces.
-        - Methods within each class.
-        - Associated XML documentation (`/// <summary>`, `<param>`, `<returns>`, `<exception>`).
+    This parser does NOT use the C# compiler, but rather regular expressions + manual analysis. 
+    
+    This means:
+        - Easier to maintain.
+        - Faster.
+        - But not perfect: if the syntax is very complex, there may be unsupported cases.
 
-    **What it does NOT extract:**
-        - Top-level functions (C# does not usually have them).
-        - Attributes, properties, delegates (these can be added later if needed).
-
-    **How it works:**
-        1. Reads the file as text.
-        2. Detects classes using regular expressions.
-        3. Delimits the `{ ... }` block of each class by counting curly brackets.
-        4. Within the block, detects methods with another regular expression.
-        5. Before each class/method, collect upstream XML documentation (`///` lines).
-        6. Convert the XML to readable, structured text.
+    The most sensitive areas are:
+        1. CLASS_RE, METHOD_RE, ATTRIBUTE_RE → to improve detection.
+        2. Key block delimitation → important to avoid false hits.
+        3. XML docstring processing → to further enrich data extraction.
 
     Args:
         path (Path):
@@ -91,18 +96,20 @@ def analyze_csharp(path: Path) -> ModuleInfo:
             Object with all the structural and documentary information of the C# file.
     """
     src = path.read_text(encoding='utf-8', errors='ignore')
-    src = src.lstrip('\ufeff')
+    src = src.lstrip('\ufeff') # Remove the BOM, which is common in files generated by Windows tools
     lines = src.splitlines()
 
     classes: List[ClassInfo] = []
 
     for cls_match in CLASS_RE.finditer(src):
-        kind = cls_match.group(1)
+        kind = cls_match.group(1) # class, record, struct, interface
         cls_name = cls_match.group(2)
         
+        # Exact line where the class begins
         cls_start = cls_match.start()
         cls_lineno = src.count("\n", 0, cls_start) + 1
 
+        # Documentation and previous attributes (decorators)
         cls_doc = _collect_xml_text(lines, cls_lineno - 1)
         cls_decorators = _collect_decorators(lines, cls_lineno - 1)
 
@@ -113,15 +120,16 @@ def analyze_csharp(path: Path) -> ModuleInfo:
             decorators=cls_decorators
         )
 
-        # Within the approximate block of that class, search for methods
-        # Find the closest opening key and count keys to narrow down the block
+        # Search for the nearest { key after the declaration
+        # This counter-based system works because C# uses well-defined curly braces
+        # But it would fail if there were curly braces inside multi-line text literals (very rare)
         idx_brace = src.find('{', cls_match.end())
         if idx_brace == -1:
             logger.warning(f"Could not find '{{' for {kind} {cls_name} in {path.name} (Line {cls_lineno})")
             classes.append(cls_info)
             continue
 
-        # Count keys to delimit the block
+        # Corresponding } key
         depth = 0
         idx = idx_brace
         idx_end = len(src)
@@ -140,15 +148,15 @@ def analyze_csharp(path: Path) -> ModuleInfo:
             
             idx += 1
 
-        # Regular expression to detect constructor methods
+        class_block = src[idx_brace:idx_end]
+
+        # It is compiled dynamically because the constructor name = class name
         CTOR_RE = re.compile(
             rf'^\s*(?:public|private|protected|internal)\s*'
             rf'(?:static\s+)?'
             rf'{re.escape(cls_name)}\s*\([^)]*\)\s*{{?',
             re.MULTILINE
         )
-
-        class_block = src[idx_brace:idx_end]
 
         for ctor in CTOR_RE.finditer(class_block):
             ctor_abs_start = idx_brace + ctor.start()
@@ -197,8 +205,8 @@ def analyze_csharp(path: Path) -> ModuleInfo:
 
     return ModuleInfo(
         path=str(path),
-        doc=None,           # C# does not have module docstrings
-        functions=[],       # In C#, there are no typical top-level functions, it is left empty
+        doc=None,           # C# does not have docstrings at the module level
+        functions=[],       # C# does not have typical top-level functions
         classes=classes,
         imports=_collect_imports(src),
         metrics=module_metrics(src, classes, [])
@@ -223,6 +231,10 @@ def _collect_xml_text(lines: List[str], start_idx: int) -> Optional[str]:
 
     If the block is not valid XML or does not contain relevant tags, it is returned as is.
 
+    **Notes:**
+        - This method is delicate: the logic depends on the exact order of lines.
+        - To extend and support more XML tags, it must be done here.
+
     Args:
         lines (List[str]):
             List of lines from the source file.
@@ -237,22 +249,22 @@ def _collect_xml_text(lines: List[str], start_idx: int) -> Optional[str]:
     idx = start_idx - 1
     buf: List[str] = []
 
-    # We move upward collecting lines ///
+    # It ascends by collecting lines with C# XML format: /// ...
     while idx >= 0:
         txt = lines[idx].rstrip()
 
-        # XML format
+        # The 3 slashes are removed and the content is stored
         if txt.strip().startswith('///'):
             buf.append(txt.strip().lstrip('/').strip())
             idx -= 1
             continue
 
-        # Empty lines
+        # Blank lines are allowed between documentation
         if txt.strip() == '':
             idx -= 1
             continue
 
-        # C# attributes
+        # If an attribute [Something] exists, the search continues upwards
         if txt.strip().startswith('[') and txt.strip().endswith(']'):
             idx -= 1
             continue
@@ -265,21 +277,19 @@ def _collect_xml_text(lines: List[str], start_idx: int) -> Optional[str]:
     buf.reverse()
     raw = '\n'.join(buf)
 
-    # If it does not appear to be documentation XML, we return it as is
     if not any(tag in raw for tag in ('<summary', '<param', '<returns', '<exception')):
         return raw
 
-    # We wrap it in a root so that it is valid XML
+    # It is wrapped in a <root> to make it valid XML
     xml_source = '<root>\n' + raw + '\n</root>'
 
     try:
         root = ET.fromstring(xml_source)
     except Exception:
-        return raw # If parsing fails, we return the raw text
+        return raw # If the XML is invalid, the text is returned as is
 
     parts: List[str] = []
 
-    # SUMMARY
     summary = root.find('summary')
     if summary is not None:
         txts = _xml_node_to_text(summary).strip()
@@ -288,7 +298,6 @@ def _collect_xml_text(lines: List[str], start_idx: int) -> Optional[str]:
             parts.append(txts)
             parts.append('')
 
-    # PARAMS
     params = root.findall('param')
     if params:
         parts.append('*Params:*')
@@ -304,7 +313,6 @@ def _collect_xml_text(lines: List[str], start_idx: int) -> Optional[str]:
 
         parts.append('')
 
-    # RETURNS
     returns = root.find('returns')
     if returns is not None:
         txtr = _xml_node_to_text(returns).strip()
@@ -315,7 +323,6 @@ def _collect_xml_text(lines: List[str], start_idx: int) -> Optional[str]:
             parts.append(f'- {txtr}')
             parts.append('')
 
-    # EXCEPTIONS
     exceptions = root.findall('exception')
     if exceptions:
         parts.append('*Exceptions:*')
@@ -370,18 +377,20 @@ def _xml_node_to_text(node: ET.Element) -> str:
 
             if cref:
                 parts.append(cref)
-
+                
         elif child.tag == 'paramref':
             name = child.attrib.get('name', '').strip()
             
             if name:
                 parts.append(name)
+
         else:
             text_child = _xml_node_to_text(child)
             
             if text_child:
                 parts.append(text_child)
 
+        # Text following the daughter tag
         if child.tail and child.tail.strip():
             parts.append(child.tail.strip())
 
@@ -452,7 +461,7 @@ def _collect_imports(src: str) -> List[str]:
 
     imports: List[str] = []
     for ns in namespaces:
-        imports.append(f"__ns__:{ns}")
+        imports.append(f'__ns__:{ns}')
 
     imports.extend(usings)
 

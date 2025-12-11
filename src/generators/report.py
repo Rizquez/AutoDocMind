@@ -54,7 +54,7 @@ def generate_report(template: str, output: str, repository: str, framework: str,
         str:
             Path of the generated DOCX file.
 
-    ## TODO: 
+    ## TODO
     - Clean row empty on tables.
     - Delete spaces amoung the bullets.
     """
@@ -111,7 +111,8 @@ def generate_report(template: str, output: str, repository: str, framework: str,
 
 def _global_stats(loc: int, sloc: int, framework: str, modules: List['ModuleInfo']) -> Dict[str, Union[str, int]]:
     """
-    
+    ## TODO
+    - Documentar
     """
     return {
         'languages': f"{framework.capitalize()}.",
@@ -122,7 +123,8 @@ def _global_stats(loc: int, sloc: int, framework: str, modules: List['ModuleInfo
 
 def _hotspots(sloc: int, module_stats: List[Dict[str, Union[str, int]]]) -> List[Dict[str, Union[str, int]]]:
     """
-    
+    ## TODO
+    - Documentar
     """
     if not sloc:
         return []
@@ -174,7 +176,8 @@ def _doc_coverage(
     attribute_percent: Union[float, int]
 ) -> Dict[str, str]:
     """
-    
+    ## TODO
+    - Documentar
     """
     return {
         'class_percent': f"{class_percent}\u0025.",
@@ -184,7 +187,8 @@ def _doc_coverage(
 
 def _complexity_notes(sloc: int, module_stats: List[Dict[str, Union[str, int]]], *, limit: int = 10) -> List[str]:
     """
-    
+    ## TODO
+    - Documentar
     """
     notes = []
 
@@ -258,7 +262,8 @@ def _complexity_notes(sloc: int, module_stats: List[Dict[str, Union[str, int]]],
 
 def _best_documented_modules(module_stats: List[Dict[str, Union[str, int]]], *, limit: int = 5) -> List[str]:
     """
-    
+    ## TODO
+    - Documentar
     """
     candidates = []
 
@@ -285,7 +290,8 @@ def _best_documented_modules(module_stats: List[Dict[str, Union[str, int]]], *, 
 
 def _worst_documented_modules(module_stats: List[Dict[str, Union[str, int]]], *, limit: int = 5) -> List[str]:
     """
-    
+    ## TODO
+    - Documentar
     """
     candidates = []
 

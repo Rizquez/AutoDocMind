@@ -24,6 +24,9 @@ def error_trace(tb: List[Tuple[str, int, str, str]], logger: 'Logger', error: Ex
     which are located in `Lib\\site-packages`. This preserves a more relevant traceback focused on 
     the application's own code.
 
+    **Notes:**
+        - This logic assumes a Windows environment because it searches for the path `Lib\\site-packages`.
+
     Args:
         tb (List[Tuple[str, int, str, str]]): 
             Traces obtained with `traceback.extract_tb`.
@@ -31,6 +34,10 @@ def error_trace(tb: List[Tuple[str, int, str, str]], logger: 'Logger', error: Ex
             Logger instance where the error will be recorded.
         error (Exception): 
             Captured exception object.
+    
+    ## TODO
+    - Develop the logic so that when the project is executed on a `Linux` environment, 
+    it correctly filters external dependencies.
     """
     filtered = [
         (filename, line, funcname, text) 
@@ -42,6 +49,8 @@ def error_trace(tb: List[Tuple[str, int, str, str]], logger: 'Logger', error: Ex
         logger.error(f"{error} - No relevant traceback found")
         return
     
+    # The last call in the traceback of the project itself usually 
+    # indicates the point where the internal logic actually failed
     filename, line, funcname, text = filtered[-1]
 
     logger.error(f"{error} occurred while processing {text} in function {funcname} (file: {filename}, line: {line})")

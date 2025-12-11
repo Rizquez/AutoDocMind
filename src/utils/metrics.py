@@ -44,7 +44,8 @@ def module_metrics(src: str, classes: List['ClassInfo'], funcs: List['FunctionIn
 
 def repository_metrics(modules: List['ModuleInfo'], repository: str) -> RepositoryMetrics:
     """
-    # TODO: Documentar
+    ## TODO
+    - Documentar
     """
     loc = 0
     sloc = 0

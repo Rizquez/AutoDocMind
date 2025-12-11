@@ -35,10 +35,11 @@ def scanner(repository: str, included: Set[str], excluded: Set[str]) -> Iterator
     root = Path(repository).resolve()
 
     for dirpath, dirnames, filenames in os.walk(root, followlinks=False):
-        dirnames[:] = [d for d in dirnames if d not in excluded]
+        dirnames[:] = [dirname for dirname in dirnames if dirname not in excluded]
 
         for filename in filenames:
             path = Path(dirpath) / filename
+            
             if path.suffix in included:
                 yield path
 

@@ -80,15 +80,16 @@ def _resolve_imports(modules: List['ModuleInfo'], paths: Dict[str, Set[str]]) ->
             Dictionary where each key represents the path of the source module and each value is a set 
             with the paths of the imported modules that were successfully resolved.
     """
-    dep_map = {module.path: set() for module in modules}
+    dep_map = {module.path: set() for module in modules} # Each module will have a set of dependencies
 
     for module in modules:
         src = module.path
 
         for imp in module.imports:
             candidates: List[str] = []
-            parts = imp.split('.')
 
+            # Candidates are generated from the complete import to its shortest form
+            parts = imp.split('.')
             while parts:
                 candidates.append('.'.join(parts))
                 parts.pop()
@@ -99,7 +100,8 @@ def _resolve_imports(modules: List['ModuleInfo'], paths: Dict[str, Set[str]]) ->
                 if candidate in paths:
                     target_paths = paths[candidate]
                     break
-
+            
+            # Each valid dependency is recorded
             for path in target_paths:
                 if path and path != src:
                     dep_map[src].add(path)
@@ -136,12 +138,12 @@ def _physical_paths(modules: List['ModuleInfo'], repository: str, framework: str
     root = Path(repository).resolve()
 
     for module in modules:
-        if framework == 'csharp':
+        if framework == 'csharp': # Imports are prefixed with __ns__: to distinguish them from regular imports
             for imp in getattr(module, 'imports', []):
                 if imp.startswith('__ns__:'):
                     ns = imp[len('__ns__:'):]
                     dct.setdefault(ns, set()).add(module.path)
-        elif framework == 'python':
+        elif framework == 'python': # Converts absolute path → relative path → module name
             relative = Path(module.path).resolve().relative_to(root)
             name = relative.with_suffix('').as_posix().replace('/', '.')
             dct.setdefault(name, set()).add(module.path)

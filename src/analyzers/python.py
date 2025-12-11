@@ -23,6 +23,7 @@ logger = logging.getLogger(ALGORITHM)
 Instance of the logger used by the analysis module.
 """
 
+# Common header sets in docstrings to identify standard sections
 RETURNS = ('Returns:', 'Return:')
 SECTIONS = ('Args:', 'Arguments:', 'Parameters:')
 RAISES = ('Raises:', 'Raise:', 'Exceptions:', 'Exception:')
@@ -61,7 +62,7 @@ def analyze_python(path: Path) -> ModuleInfo:
     classes: List[ClassInfo] = []
 
     for node in tree.body:
-        if isinstance(node, ast.FunctionDef):
+        if isinstance(node, ast.FunctionDef): # Higher-level functions
             funcs.append(
                 FunctionInfo(
                     name=node.name,
@@ -70,7 +71,7 @@ def analyze_python(path: Path) -> ModuleInfo:
                     decorators=_collect_decorators(node, src)
                 )
             )
-        elif isinstance(node, ast.ClassDef):
+        elif isinstance(node, ast.ClassDef): # Classes
             cls = ClassInfo(
                 name=node.name,
                 lineno=node.lineno,
@@ -79,7 +80,7 @@ def analyze_python(path: Path) -> ModuleInfo:
             )
 
             for sub in node.body:
-                if isinstance(sub, ast.FunctionDef):
+                if isinstance(sub, ast.FunctionDef): # Class methods
                     cls.methods.append(FunctionInfo(
                         name=sub.name,
                         lineno=sub.lineno,
@@ -87,9 +88,9 @@ def analyze_python(path: Path) -> ModuleInfo:
                         decorators=_collect_decorators(sub, src)
                     ))
 
-                elif isinstance(sub, ast.Assign):
+                elif isinstance(sub, ast.Assign): # Class attributes
                     for target in sub.targets:
-                        if isinstance(target, ast.Name):
+                        if isinstance(target, ast.Name): # Only attributes defined by simple name are traversed
                             cls.attributes.append(
                                 AttributeInfo(
                                     name=target.id,
@@ -97,7 +98,7 @@ def analyze_python(path: Path) -> ModuleInfo:
                                     doc=None,
                                 )
                             )
-                elif isinstance(sub, ast.AnnAssign):
+                elif isinstance(sub, ast.AnnAssign): # Class attributes with type assignments (PEP 526)
                     if isinstance(sub.target, ast.Name):
                         cls.attributes.append(
                             AttributeInfo(
@@ -111,11 +112,11 @@ def analyze_python(path: Path) -> ModuleInfo:
 
             classes.append(cls)
         else:
+            # For any node that is not FunctionDef or ClassDef, a warning is logged
+            # This helps detect unanticipated structures
             node_type = type(node).__name__
             lineno = getattr(node, 'lineno', '?')
 
-            # Short text representing the node
-            # Limit length so as not to clutter the log
             try:
                 summary = ast.dump(node, annotate_fields=True, include_attributes=False)
                 summary = (summary[:120] + '...') if len(summary) > 120 else summary
@@ -216,17 +217,22 @@ def _normalize_document(doc: Optional[str]) -> Optional[str]:
         ):
             cursor = lines[idx_local]
 
+            # Skip blank lines without cutting the block
             if not cursor.strip():
                 idx_local += 1
                 continue
-
+            
+            # Current indentation level
             indent = len(cursor) - len(cursor.lstrip())
+
+            # It attempts to detect the pattern → name: description
             match_cursor = re.match(r'\s*([^:]+):\s*(.*)', cursor)
 
             if match_cursor:
                 name = match_cursor.group(1).strip()
                 desc = match_cursor.group(2).strip()
 
+                # The following most indented lines are sought to concatenate them as a multiline description
                 jdx = idx_local + 1
                 extra: List[str] = []
                 while jdx < n_lines:
@@ -246,9 +252,11 @@ def _normalize_document(doc: Optional[str]) -> Optional[str]:
                 if extra:
                     desc = (desc + ' ' + ' '.join(extra)).strip()
 
+                # Initial hyphens are removed to avoid duplicate bullets
                 items.append(f"- {name}: {desc.replace('- ', '')}")
                 idx_local = jdx
             else:
+                # Line without pattern → name: value, treated as a generic list element
                 items.append(f"- {cursor.strip().replace('- ', '')}")
                 idx_local += 1
 
@@ -264,7 +272,7 @@ def _normalize_document(doc: Optional[str]) -> Optional[str]:
 
             idx, items = _format_block_text(idx)
             out.extend(items)
-            out.append('')
+            out.append('') # Blank line to separate sections
 
             continue
 
@@ -300,13 +308,13 @@ def _collect_decorators(node: ast.AST, src: str) -> List[str]:
     decorators: List[str] = []
 
     for deco in getattr(node, 'decorator_list', []):
-        text = ast.get_source_segment(src, deco)
+        text = ast.get_source_segment(src, deco) # Attempts to retrieve the exact text from the source code
 
         if text is None:
             try:
-                text = ast.unparse(deco) 
+                text = ast.unparse(deco) # If it fails, `ast.unparse` is used as an approximation
             except Exception:
-                text = repr(deco)
+                text = repr(deco) # And if that also fails, it reverts to a generic repr
 
         decorators.append(text.lstrip('@').strip())
 
@@ -326,6 +334,7 @@ def _collect_imports(tree: ast.AST) -> List[str]:
     """
     imports: List[str] = []
 
+    # ast.walk traverses the entire tree in depth
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
@@ -336,7 +345,7 @@ def _collect_imports(tree: ast.AST) -> List[str]:
                 if module:
                     imports.append(f'{module}.{alias.name}')
                 else:
-                    imports.append(alias.name)
+                    imports.append(alias.name) # Relative imports without explicit module
         else:
             pass
 
