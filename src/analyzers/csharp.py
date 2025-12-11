@@ -447,8 +447,8 @@ def _collect_imports(src: str) -> List[str]:
     """
     src = src.lstrip('\ufeff')
 
-    namespaces = sorted({module.group(1) for module in NAMESPACE_RE.finditer(src)})
-    usings = sorted({module.group(1) for module in USING_RE.finditer(src)})
+    namespaces = sorted({item.group(1) for item in NAMESPACE_RE.finditer(src)})
+    usings = sorted({item.group(1) for item in USING_RE.finditer(src)})
 
     imports: List[str] = []
     for ns in namespaces:

@@ -1,12 +1,18 @@
 # MODULES (EXTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
 import os
+from pathlib import Path
+from datetime import datetime
 from docxtpl import DocxTemplate
+from typing import TYPE_CHECKING, List, Dict, Union
 # ---------------------------------------------------------------------------------------------------------------------
 
 # MODULES (INTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
-# Get listed here!
+from common.constants import ALGORITHM_VERSION
+
+if TYPE_CHECKING:
+    from src.models import ModuleInfo
 # ---------------------------------------------------------------------------------------------------------------------
 
 # OPERATIONS / CLASS CREATION / GENERAL FUNCTIONS
@@ -16,15 +22,17 @@ __all__ = ['generate_report']
 
 FILE = 'Report.docx'
 
-def generate_report(template: str, output: str) -> str:
+def generate_report(template: str, output: str, repository: str, framework: str, modules: List['ModuleInfo']) -> str:
     """
     
     """
     docx = DocxTemplate(template)
 
+    date = datetime.now()
+
     context = {
-        'repository_name': '',
-        'analysis_date': '',
+        'repository_name': Path(repository).resolve().name,
+        'analysis_date': date.strftime('%A, %B %d, %Y'),
         'summary': {
             'repository_goal': '',
             'scope': '',
@@ -35,23 +43,8 @@ def generate_report(template: str, output: str) -> str:
                 # ...
             ],
         },
-        'global_stats': {
-            'languages': '',
-            'n_files': 0,
-            'total_loc': 0,
-            'total_sloc': 0,
-        },
-        'modules_overview': [
-            {
-                'path': '',
-                'loc': 0,
-                'sloc': 0,
-                'n_classes': 0,
-                'n_methods': 0,
-                'n_functions': 0,
-            },
-            # ...
-        ],
+        'global_stats': _global_stats(framework, modules),
+        'modules_overview': _modules_overview(repository, modules),
         'hotspots': [
             {
                 'module': '',
@@ -66,11 +59,7 @@ def generate_report(template: str, output: str) -> str:
             '',
             # ...
         ],
-        'doc_coverage': {
-            'class_percent': 0,
-            'method_percent': 0,
-            'attribute_percent': 0,
-        },
+        'doc_coverage': _doc_coverage(),
         'best_documented_modules': [
             {
                 'name': '', 
@@ -119,7 +108,8 @@ def generate_report(template: str, output: str) -> str:
                 '',
                 # ...
             ],
-        }
+        },
+        'version': ALGORITHM_VERSION
     }
 
     docx.render(context)
@@ -129,6 +119,67 @@ def generate_report(template: str, output: str) -> str:
     docx.save(path)
 
     return path
+
+def _global_stats(framework: str, modules: List['ModuleInfo']) -> Dict[str, Union[str, int]]:
+    """
+    
+    """
+    loc = 0
+    sloc = 0
+
+    for module in modules:
+        if module.metrics:
+            loc += module.metrics.loc or 0
+            sloc += module.metrics.sloc or 0
+
+    return {
+        'languages': framework.capitalize(),
+        'n_files': len(modules),
+        'total_loc': loc,
+        'total_sloc': sloc
+    }
+
+def _modules_overview(repository: str, modules: List['ModuleInfo']) -> List[Dict[str, Union[str, int]]]:
+    """
+    
+    """
+    out = []
+
+    for module in sorted(modules, key=lambda module: module.path):
+        if module.metrics:
+            out.append({
+                'path': Path(module.path).resolve().relative_to(Path(repository).resolve()).name,
+                'loc': module.metrics.loc,
+                'sloc': module.metrics.sloc,
+                'n_classes': module.metrics.n_classes,
+                'n_methods': module.metrics.n_methods,
+                'n_functions': module.metrics.n_functions
+            })
+
+    return out
+
+def _doc_coverage(modules: List['ModuleInfo']) -> Dict[str, int]:
+    """
+    
+    """
+    class_percent = 0
+    method_percent = 0 
+    attribute_percent = 0
+
+    return {
+        'class_percent': class_percent,
+        'method_percent': method_percent,
+        'attribute_percent': attribute_percent,
+    }
+
+
+
+
+
+
+
+
+
 
 # ---------------------------------------------------------------------------------------------------------------------
 # END OF FILE
