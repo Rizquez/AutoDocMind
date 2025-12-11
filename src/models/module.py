@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 
 # MODULES (INTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
-from src.models.entities import ClassInfo, FunctionInfo
+from src.models import ClassInfo, FunctionInfo
 # ---------------------------------------------------------------------------------------------------------------------
 
 # OPERATIONS / CLASS CREATION / GENERAL FUNCTIONS
