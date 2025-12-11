@@ -1,4 +1,4 @@
-# 🤖 AutoDocMind - v.0.10.1
+# 🤖 AutoDocMind - v.0.11.0
 
 ## 🧾 Project description
 
@@ -128,8 +128,7 @@ AutoDocMind/
 │   │   └── scanner.py
 │   ├── utils
 │   │   ├── maps.py
-│   │   ├── metrics.py
-│   │   └── paths.py
+│   │   └── metrics.py
 │   └── execute.py
 ├── templates
 │   └── report.docx

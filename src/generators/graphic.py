@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, List, Dict, Set
 
 # MODULES (INTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
-from src.utils.paths import dependencies_path
 from common.constants import ALGORITHM_VERSION
 from src.utils.maps import dependencies_map, identifiers_map
 
@@ -126,7 +125,7 @@ def _map_to_graphic(repository: str, dep_map: Dict[str, Set[str]], format: str) 
         fontsize='44'
     )
 
-    all_path = dependencies_path(dep_map)
+    all_path = _module_paths(dep_map)
 
     id_map = identifiers_map(all_path)
 
@@ -191,6 +190,32 @@ def _short_label(path: str) -> str:
             Base filename without extension.
     """
     return Path(path).stem
+
+def _module_paths(dep_map: Dict[str, Set[str]]) -> List[str]:
+    """
+    This function retrieves the complete list of module paths present in the dependency map.
+
+    **It extracts:**
+        - all keys from the dictionary (source modules)
+        - all values ​​for each key (target modules)
+
+    Then it combines both sets, removes duplicates, and returns them sorted.
+
+    Args:
+        dep_map(Dict[str, Set[str]]): 
+            Dictionary where each key is a module and its value is a set of modules on which 
+            it depends.
+
+    Returns:
+        List: 
+            Alphabetically ordered list with all the unique paths detected.
+    """
+    all_path = list(dep_map.keys())
+
+    for path in dep_map.values():
+        all_path.extend(list(path))
+
+    return sorted(set(all_path))
 
 # ---------------------------------------------------------------------------------------------------------------------
 # END OF FILE

@@ -59,7 +59,7 @@ def generate_report(template: str, output: str, repository: str, framework: str,
             '',
             # ...
         ],
-        'doc_coverage': _doc_coverage(),
+        'doc_coverage': _doc_coverage(modules),
         'best_documented_modules': [
             {
                 'name': '', 
