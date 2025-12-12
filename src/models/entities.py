@@ -6,13 +6,13 @@ from dataclasses import dataclass, field
 
 # MODULES (INTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
-# Get listed here!
+from src.models.metrics import ModuleMetrics
 # ---------------------------------------------------------------------------------------------------------------------
 
 # OPERATIONS / CLASS CREATION / GENERAL FUNCTIONS
 # ---------------------------------------------------------------------------------------------------------------------
 
-__all__ = ['AttributeInfo', 'FunctionInfo' ,'ClassInfo']
+__all__ = ['AttributeInfo', 'FunctionInfo', 'ClassInfo', 'ModuleInfo']
 
 @dataclass
 class AttributeInfo:
@@ -76,6 +76,32 @@ class ClassInfo:
     methods: List[FunctionInfo] = field(default_factory=list)
     attributes: List[AttributeInfo] = field(default_factory=list)
     decorators: List[str] = field(default_factory=list)
+
+@dataclass
+class ModuleInfo:
+    """
+    Represents the analyzed structure of a source code file or module.
+
+    Attributes:
+        path (str):
+            Full path to the file that was analyzed.
+        doc (str, optional):
+            Docstring of the module, if defined at the beginning of the file.
+        functions (List[FunctionInfo]):
+            List of functions defined at the module level.
+        classes (List[ClassInfo]):
+            List of classes found in the module, including their internal methods.
+        imports(List[str]):
+            List of imports on the module.
+        metrics (ModuleMetrics, optional):
+            Metrics associated with the module.
+    """
+    path: str
+    doc: Optional[str]
+    functions: List[FunctionInfo]
+    classes: List[ClassInfo]
+    imports: List[str] = field(default_factory=list)
+    metrics: Optional[ModuleMetrics] = None
 
 # ---------------------------------------------------------------------------------------------------------------------
 # END OF FILE

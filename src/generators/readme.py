@@ -7,7 +7,7 @@ from typing import List, TYPE_CHECKING
 # MODULES (INTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
 from src.tools.docstring import format_docstring
-from configuration.constants import ALGORITHM_VERSION, NO_METHOD, NO_FUNCTION, NO_CLASS, NO_MODULE, NO_ATTRIBUTE
+from common.constants import ALGORITHM_VERSION, NO_METHOD, NO_FUNCTION, NO_CLASS, NO_MODULE, NO_ATTRIBUTE
 
 if TYPE_CHECKING:
     from src.models import ModuleInfo
@@ -48,14 +48,6 @@ def render_readme(modules: List['ModuleInfo'], repository: str, *, cleaned: List
     for module in sorted(modules, key=lambda module: module.path):
         relative = Path(module.path).resolve().relative_to(Path(repository).resolve())
         lines.append(f'## 🗂️ Module: `{relative.as_posix()}`\n')
-
-        if module.metrics:
-            lines.append('### 📊 Basic module metrics')
-            lines.append(f'- Total classes: {module.metrics.n_classes}')
-            lines.append(f'- Total methods: {module.metrics.n_methods}')
-            lines.append(f'- Total functions: {module.metrics.n_functions}')
-            lines.append(f'- Total lines of the module: {module.metrics.loc}')
-            lines.append(f'- Total useful lines of the module: {module.metrics.sloc}\n')
 
         if not module.classes and not module.functions:
             lines.append(f'*{NO_MODULE}*\n')

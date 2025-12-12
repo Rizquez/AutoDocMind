@@ -10,11 +10,11 @@ from src.analyzers import *
 from src.generators import *
 from src.tools.scanner import scanner
 from helpers.traces import error_trace
-from configuration.constants import ALGORITHM
+from common.constants import ALGORITHM
 
 if TYPE_CHECKING:
     from src.models import ModuleInfo
-    from configuration.settings import Settings
+    from common.settings import Settings
 # ---------------------------------------------------------------------------------------------------------------------
 
 # OPERATIONS / CLASS CREATION / GENERAL FUNCTIONS
@@ -60,6 +60,10 @@ def execute(settings: 'Settings') -> None:
     logger.info("Generating dependency graph ...")
     path = render_graphic(modules, settings.output, settings.repository, settings.framework)
     logger.info(f"Dependency graph generated: {path}")
+
+    logger.info("Generating report ...")
+    path = generate_report(settings.template, settings.output, settings.repository, settings.framework, modules)
+    logger.info(f"Report generated: {path}")
 
 # ---------------------------------------------------------------------------------------------------------------------
 # END OF FILE

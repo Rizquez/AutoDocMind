@@ -1,12 +1,11 @@
 # MODULES (EXTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
+from pathlib import Path
 from typing import TYPE_CHECKING, List, Dict, Set
 # ---------------------------------------------------------------------------------------------------------------------
 
 # MODULES (INTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
-from src.utils.paths import physical_path
-
 if TYPE_CHECKING:
     from src.models import ModuleInfo
 # ---------------------------------------------------------------------------------------------------------------------
@@ -16,7 +15,7 @@ if TYPE_CHECKING:
 
 __all__ = ['dependencies_map', 'identifiers_map']
 
-def dependencies_map(modules: List['ModuleInfo'], repository: str, framework: str) -> Dict[str, Set]:
+def dependencies_map(modules: List['ModuleInfo'], repository: str, framework: str) -> Dict[str, Set[str]]:
     """
     Build the dependency map between modules based on analysis information and the logical 
     paths of the project.
@@ -33,9 +32,9 @@ def dependencies_map(modules: List['ModuleInfo'], repository: str, framework: st
         Dict:
             Dependency structure produced by the corresponding repository and framework.
     """
-    paths = physical_path(modules, repository, framework)
+    paths = _physical_paths(modules, repository, framework)
 
-    return _dependencies(modules, paths)
+    return _resolve_imports(modules, paths)
 
 def identifiers_map(all_path: List[str]) -> Dict[str, str]:
     """
@@ -54,7 +53,7 @@ def identifiers_map(all_path: List[str]) -> Dict[str, str]:
     """
     return {path: f'm{idx}' for idx, path in enumerate(all_path)}
 
-def _dependencies(modules: List['ModuleInfo'], paths: Dict[str, str]) -> Dict[str, Set[str]]:
+def _resolve_imports(modules: List['ModuleInfo'], paths: Dict[str, Set[str]]) -> Dict[str, Set[str]]:
     """
     Builds the actual dependency map between repository modules.
 
@@ -73,7 +72,7 @@ def _dependencies(modules: List['ModuleInfo'], paths: Dict[str, str]) -> Dict[st
     Args:
         modules (List[ModuleInfo]):
             List of `ModuleInfo` objects representing the analyzed modules in the repository.
-        paths (Dict[str, str]):
+        paths (Dict[str, Set[str]]):
             Dictionary that relates package/module name to the physical path of the corresponding file.
 
     Returns:
@@ -81,15 +80,16 @@ def _dependencies(modules: List['ModuleInfo'], paths: Dict[str, str]) -> Dict[st
             Dictionary where each key represents the path of the source module and each value is a set 
             with the paths of the imported modules that were successfully resolved.
     """
-    dep_map = {module.path: set() for module in modules}
+    dep_map = {module.path: set() for module in modules} # Each module will have a set of dependencies
 
     for module in modules:
         src = module.path
 
         for imp in module.imports:
             candidates: List[str] = []
-            parts = imp.split('.')
 
+            # Candidates are generated from the complete import to its shortest form
+            parts = imp.split('.')
             while parts:
                 candidates.append('.'.join(parts))
                 parts.pop()
@@ -100,12 +100,57 @@ def _dependencies(modules: List['ModuleInfo'], paths: Dict[str, str]) -> Dict[st
                 if candidate in paths:
                     target_paths = paths[candidate]
                     break
-
+            
+            # Each valid dependency is recorded
             for path in target_paths:
                 if path and path != src:
                     dep_map[src].add(path)
 
     return dep_map
+
+def _physical_paths(modules: List['ModuleInfo'], repository: str, framework: str) -> Dict[str, Set[str]]:
+    """
+    Retrieves the logical module names along with their actual physical paths.
+
+    This method translates the full file paths in the repository to extensionless 
+    relative paths, and then converts these paths into a format fully compatible 
+    with the standard way of importing modules.
+
+    Args:
+        modules (List[ModuleInfo]):
+            List of `ModuleInfo` objects representing the analyzed modules in the repository.
+        repository (str):
+            Base path of the repository or project to be analyzed.
+        framework (str):
+            Name of the framework used, which must have a compatible mapping method.
+
+    Returns:
+        Dict:
+            Dictionary where each key is a logical identifier and each value is a set of file 
+            paths that implement it within the repository.
+
+    Raises:
+        ValueError:
+            When the framework does not have a registered compatible method.
+    """
+    dct = {}
+
+    root = Path(repository).resolve()
+
+    for module in modules:
+        if framework == 'csharp': # Imports are prefixed with __ns__: to distinguish them from regular imports
+            for imp in getattr(module, 'imports', []):
+                if imp.startswith('__ns__:'):
+                    ns = imp[len('__ns__:'):]
+                    dct.setdefault(ns, set()).add(module.path)
+        elif framework == 'python': # Converts absolute path → relative path → module name
+            relative = Path(module.path).resolve().relative_to(root)
+            name = relative.with_suffix('').as_posix().replace('/', '.')
+            dct.setdefault(name, set()).add(module.path)
+        else:
+            raise ValueError(f"Check the execution parameters, the {framework} framework is not currently supported")
+        
+    return dct
 
 # ---------------------------------------------------------------------------------------------------------------------
 # END OF FILE

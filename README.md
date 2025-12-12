@@ -1,4 +1,4 @@
-# 🤖 AutoDocMind - v.0.10.1
+# 🤖 AutoDocMind - v.0.14.0
 
 ## 🧾 Project description
 
@@ -6,7 +6,7 @@
 
 Its goal is to save developers time by automatically creating files such as README, flowcharts, and explanations of each module, without relying on manual writing.
 
-It combines static code analysis with natural language processing to provide a comprehensive overview of the project, its dependencies, and its internal structure.
+Through static code analysis, it provides a comprehensive overview of the project, its dependencies, and its internal structure.
 
 ## 📑 Context
 
@@ -27,28 +27,20 @@ Technical documentation often lags behind the pace of development, creating thre
 - Prepare a **release** and validate documentation and dependencies.
 - Perform automated **technical reviews** to identify *magic* functions or poorly cohesive modules.
 
-> [!IMPORTANT]
-> Supported programming languages: Python and C#.
-
-## 🛠️ Key features (MVP)
-
-### First phase
+## 🛠️ Key features
 
 - Browse the repository filtering by a specific programming language.
-- Detection of documentation on classes, methods, decorators, and functions (depending on the language).
-- Generation of documentation in `README` file.
+- Detection of documentation on classes, methods, decorators, and functions.
+- Obtaining minimum metrics for each module based on the elements contained in the module.
 
-> [!NOTE]
-> The README file is generated from the existing documentation in the code.
+### Generated documents
 
-### Second phase
-
-- Minimum metrics on the files.
-- Dependency map (import between modules).
-- Templates with Jinja2 for report generation.
+- **Readme** file generated based on existing documentation in the repository code.
+- **Graph** associated with the map of import dependencies between modules.
+- **Report** with relevant information on common indicators and interpreted metrics.
 
 > [!IMPORTANT]
-> This phase is currently under development.
+> Supported programming languages: Python and C#.
 
 ## 💽 Installation (Windows)
 
@@ -100,7 +92,7 @@ Where:
 - **excluded (optional):** Additional files and extensions to exclude from the scan, separated by commas if multiple are specified.
 
 > [!NOTE]
-> For more details about the parameters and execution arguments, see the file located at: *handlers/console.py*
+> For more details about the parameters and execution arguments, see the file located at: *handlers/arguments.py*
 
 ## 📂 Estructura del proyecto
 
@@ -108,7 +100,7 @@ The main files are organized into:
 
 ```
 AutoDocMind/
-├── configuration
+├── common
 │   ├── constants.py
 │   └── settings.py
 ├── handlers
@@ -119,8 +111,8 @@ AutoDocMind/
 ├── src
 │   ├── analyzers
 │   │   ├── __init__.py
-│   │   ├── python.py
-│   │   └── csharp.py
+│   │   ├── csharp.py
+│   │   └── python.py
 │   ├── generators
 │   │   ├── __init__.py
 │   │   ├── graphic.py
@@ -129,16 +121,18 @@ AutoDocMind/
 │   ├── models
 │   │   ├── __init__.py
 │   │   ├── entities.py
-│   │   └── module.py
+│   │   └── metrics.py
 │   ├── tools
 │   │   ├── docstring.py
 │   │   ├── fixers.py
+│   │   ├── nums.py
 │   │   └── scanner.py
 │   ├── utils
 │   │   ├── maps.py
-│   │   ├── paths.py
 │   │   └── metrics.py
 │   └── execute.py
+├── templates
+│   └── report.docx
 ├── .gitignore
 ├── LICENSE
 ├── main.py
@@ -194,7 +188,8 @@ print(m._Motor__status)    # ✔️ Access possible, but not recommended (Output
 
 ## 📖 Additional documentation
 
-...
+- [Graphviz](https://graphviz.org/)
+- [Jinja2](https://jinja.palletsprojects.com/en/stable/)
 
 ## 🔒 License
 
