@@ -1,4 +1,4 @@
-# 🤖 AutoDocMind - v.0.13.0
+# 🤖 AutoDocMind - v.0.14.0
 
 ## 🧾 Project description
 

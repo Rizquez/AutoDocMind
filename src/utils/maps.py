@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 __all__ = ['dependencies_map', 'identifiers_map']
 
-def dependencies_map(modules: List['ModuleInfo'], repository: str, framework: str) -> Dict[str, Set]:
+def dependencies_map(modules: List['ModuleInfo'], repository: str, framework: str) -> Dict[str, Set[str]]:
     """
     Build the dependency map between modules based on analysis information and the logical 
     paths of the project.
