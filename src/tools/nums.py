@@ -34,20 +34,20 @@ def percentage(part: int, total: int, *, factor: int = 2) -> Union[float, int]:
     num = round((part / total) * 100, factor)
     return int(num) if num.is_integer() else num
     
-def average(elements: List[Union[int, float]]) -> Union[int, float]:
+def average(items: List[Union[int, float]]) -> Union[int, float]:
     """
     Calculate the average of a list of numerical values.
 
     Args:
-        elements (List[Union[int, float]]):
+        items (List[Union[int, float]]):
             List of numerical values to be averaged.
 
     Returns:
         (int | float):
             The calculated average.
     """
-    num = sum(elements) / len(elements)
-    return int(num) if num.is_integer() else num
+    avg = sum(items) / len(items)
+    return int(avg) if avg.is_integer() else avg
 
 # ---------------------------------------------------------------------------------------------------------------------
 # END OF FILE

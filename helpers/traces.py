@@ -40,7 +40,7 @@ def error_trace(tb: List[Tuple[str, int, str, str]], logger: 'Logger', error: Ex
     ]
 
     if not filtered:
-        logger.error(f"{error} - No relevant traceback found")
+        logger.error(f"{error} - No relevant internal traces were found")
         return
     
     # The last call in the traceback of the project itself usually 

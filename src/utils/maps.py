@@ -132,8 +132,6 @@ def _physical_paths(modules: List['ModuleInfo'], repository: str, framework: str
     """
     dct = {}
 
-    root = Path(repository).resolve()
-
     for module in modules:
         if framework == 'csharp': # Imports are prefixed with __ns__: to distinguish them from regular imports
             for imp in getattr(module, 'imports', []):
@@ -141,7 +139,7 @@ def _physical_paths(modules: List['ModuleInfo'], repository: str, framework: str
                     ns = imp[len('__ns__:'):]
                     dct.setdefault(ns, set()).add(module.path)
         elif framework == 'python': # Converts absolute path → relative path → module name
-            relative = Path(module.path).resolve().relative_to(root)
+            relative = Path(module.path).resolve().relative_to(Path(repository).resolve())
             name = relative.with_suffix('').as_posix().replace('/', '.')
             dct.setdefault(name, set()).add(module.path)
         else:

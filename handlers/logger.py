@@ -34,18 +34,11 @@ class HandlerLogger:
         """
         Configures the logger associated with the **Algorithm** layer.
 
-        **Notes:**
-            - This method *creates the output directory* that will contain all generated files.
-
         Args:
             output (str):
                 Path of the directory where the file will be stored. If it does not exist, 
                 it is created automatically.
         """
-        os.makedirs(output, exist_ok=True)
-
-        file = os.path.join(output, FILE)
-
         logger = logging.getLogger(ALGORITHM)
         if logger.handlers: 
             return
@@ -55,8 +48,8 @@ class HandlerLogger:
         # Prevents messages from being sent to the root logger 
         # so that they are not duplicated in other handlers
         logger.propagate = False
-
-        logger.addHandler(cls.__handler(file))
+        
+        logger.addHandler(cls.__handler(file=os.path.join(output, FILE)))
         logger.addHandler(cls.__stream_handler())
         
     @staticmethod

@@ -15,8 +15,8 @@ from typing import Set, Iterator
 
 def scanner(repository: str, included: Set[str], excluded: Set[str]) -> Iterator[Path]:
     """
-    Recursively traverse a directory and generate the paths of files that match the specified extensions, 
-    excluding unwanted folders.
+    Recursively traverse a directory and generate the paths of files that match 
+    the specified extensions, excluding unwanted folders.
 
     Args:
         repository (str):
