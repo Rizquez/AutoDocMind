@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 # MODULES (INTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
-# Get listed here!
+from common.constants import PROJECT_ROOT
 # ---------------------------------------------------------------------------------------------------------------------
 
 # OPERATIONS / CLASS CREATION / GENERAL FUNCTIONS
@@ -41,19 +41,17 @@ class Settings:
     """
 
     def __init__(self, args: Namespace) -> None:
-        self.__root = self.__root_path()
-
         self.__framework = args.framework.lower()
         self.__repository = args.repository
         self.__excluded = self.__set_excluded(args.excluded)
         self.__included = EXTENSIONS.get(self.__framework, set())
         
-        self.__template = os.path.join(self.__root, 'templates', 'analysis_report.docx')
+        self.__template = os.path.join(PROJECT_ROOT, 'templates', 'analysis_report.docx')
 
         if args.output:
             self.__output = os.path.join(args.output, FOLDER)
         else:
-            self.__output = os.path.join(self.__root, FOLDER)
+            self.__output = os.path.join(PROJECT_ROOT, FOLDER)
 
     @property
     def framework(self) -> str:
@@ -78,19 +76,7 @@ class Settings:
     @property
     def output(self) -> str:
         return self.__output
-    
-    @staticmethod
-    def __root_path() -> str:
-        """
-        This static method determines the absolute path of the current file, 
-        removes the last directory level, and returns the resulting path.
 
-        Returns:
-            str: 
-                Absolute path of the project root directory.
-        """
-        return '\\'.join(item for item in os.path.dirname(os.path.abspath(__file__)).split('\\')[:-1])
-    
     @staticmethod
     def __set_excluded(excluded: str) -> Set[str]:
         """

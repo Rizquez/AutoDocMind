@@ -1,6 +1,7 @@
 # MODULES (EXTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
 from __future__ import annotations
+from pathlib import Path
 from typing import List, Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -9,46 +10,60 @@ if TYPE_CHECKING:
 
 # MODULES (INTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
-# Get listed here!
+from common.constants import PROJECT_ROOT
 # ---------------------------------------------------------------------------------------------------------------------
 
 # OPERATIONS / CLASS CREATION / GENERAL FUNCTIONS
 # ---------------------------------------------------------------------------------------------------------------------
 
-def error_trace(tb: List[Tuple[str, int, str, str]], logger: Logger, error: Exception) -> None:
+Trace = Tuple[str, int, str, str]
+
+def error_trace(traces: List[Trace], logger: Logger, error: Exception) -> None:
     """
-    It records an error in the logger with filtered trace information.
+    It records an error in the logger, filtering only the traces that belong to the project's internal code.
 
-    The function processes the error trace and removes entries that come from external libraries, 
-    which are located in `Lib\\site-packages`. This preserves a more relevant traceback focused on 
-    the application's own code.
-
-    **Notes:**
-        - This logic assumes a Windows environment because it searches for the path `Lib\\site-packages`.
+    Based on the traceback information, entries whose path is not under the project root are discarded. This way, 
+    the resulting error message focuses on the exact point where the application's own logic failed, ignoring calls 
+    from external libraries or the system.
 
     Args:
-        tb (List[Tuple[str, int, str, str]]): 
-            Traces obtained with `traceback.extract_tb`.
-        logger (Logger): 
-            Logger instance where the error will be recorded.
-        error (Exception): 
-            Captured exception object.
+        traces (List[Trace]):
+            List of traces obtained using `traceback.extract_tb`.
+        logger (Logger):
+            Instance of the logger where the error will be recorded.
+        error (Exception):
+            Captured exception that caused the failure.
     """
-    filtered = [
-        (filename, line, funcname, text) 
-        for filename, line, funcname, text in tb 
-        if r'Lib\site-packages' not in filename
+    root = _normalize(PROJECT_ROOT)
+
+    internal = [
+        trace for trace in traces
+        if _normalize(trace[0]).startswith(root)
     ]
 
-    if not filtered:
+    if not internal:
         logger.error(f"{error} - No relevant internal traces were found")
         return
     
     # The last call in the traceback of the project itself usually 
     # indicates the point where the internal logic actually failed
-    filename, line, funcname, text = filtered[-1]
+    filename, line, funcname, text = internal[-1]
 
     logger.error(f"{error} occurred while processing {text} in function {funcname} (file: {filename}, line: {line})")
+
+def _normalize(path: str) -> str:
+    """
+    Normalize a file path.
+
+    Args:
+        path (str):
+            Path of the file to be normalized.
+
+    Returns:
+        str:
+            Normalized path in string format.
+    """
+    return str(Path(path).resolve()).lower()
 
 # ---------------------------------------------------------------------------------------------------------------------
 # END OF FILE

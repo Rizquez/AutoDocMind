@@ -1,6 +1,6 @@
 # MODULES (EXTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
-# Get listed here!
+from pathlib import Path
 # ---------------------------------------------------------------------------------------------------------------------
 
 # MODULES (INTERNAL)
@@ -11,12 +11,17 @@
 # OPERATIONS / CLASS CREATION / GENERAL FUNCTIONS
 # ---------------------------------------------------------------------------------------------------------------------
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+"""
+Absolute path to the root of the project.
+"""
+
 ALGORITHM = 'ALGORITHM'
 """
 Handler for the `.log` file for storing the execution trace.
 """
 
-ALGORITHM_VERSION = '0.15.0'
+ALGORITHM_VERSION = '0.15.1'
 """
 Current version of the algorithm.
 """
