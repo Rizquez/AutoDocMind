@@ -8,7 +8,7 @@ from typing import List, TYPE_CHECKING
 # MODULES (INTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
 from src.analyzers import *
-from src.generators import *
+from src.renderers import *
 from src.tools.scanner import scanner
 from helpers.traces import error_trace
 from common.constants import ALGORITHM
@@ -56,8 +56,7 @@ def execute(settings: Settings) -> None:
             error_trace(tb, logger, error)
 
     logger.info(f"Generating README ...")
-    readme_txt = render_readme(modules, settings.repository)
-    readme_path = write_readme(readme_txt, settings.output)
+    readme_path = render_readme(modules, settings.repository, settings.output)
     logger.info(f"README generated: {readme_path}")
 
     logger.info("Generating dependency graph ...")
@@ -65,7 +64,7 @@ def execute(settings: Settings) -> None:
     logger.info(f"Dependency graph generated: {graphic_path}")
 
     logger.info("Generating report ...")
-    report_path = generate_report(settings.template, settings.output, settings.repository, settings.framework, modules)
+    report_path = render_report(modules, settings.output, settings.repository, settings.framework)
     logger.info(f"Report generated: {report_path}")
 
 # ---------------------------------------------------------------------------------------------------------------------

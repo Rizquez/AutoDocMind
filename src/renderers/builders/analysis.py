@@ -1,20 +1,13 @@
 # MODULES (EXTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
 from __future__ import annotations
-import os
 from pathlib import Path
-from datetime import datetime
-from docxtpl import DocxTemplate
 from typing import List, Dict, Union, Set, TYPE_CHECKING
 # ---------------------------------------------------------------------------------------------------------------------
 
 # MODULES (INTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
-from src.utils.maps import dependencies_map
 from src.tools.nums import percentage, average
-from common.constants import ALGORITHM_VERSION
-from src.utils.metrics import repository_metrics
-from src.tools.docs import bold_core_module_names
 
 if TYPE_CHECKING:
     from src.models import ModuleInfo
@@ -23,119 +16,7 @@ if TYPE_CHECKING:
 # OPERATIONS / CLASS CREATION / GENERAL FUNCTIONS
 # ---------------------------------------------------------------------------------------------------------------------
 
-__all__ = ['generate_report']
-
-FILE = 'Report.docx'
-
-def generate_report(template: str, output: str, repository: str, framework: str, modules: List[ModuleInfo]) -> str:
-    """
-    Generates a repository analysis report in DOCX format from a template.
-
-    This function takes the results of the static analysis of the modules in a repository, 
-    transforms them into a high-level data structure (`ReportInfo`), and injects them into 
-    a *DOCX* template using `docxtpl`. The result is a report ready to be consulted or shared.
-
-    Args:
-        template (str):
-            Path to the DOCX template file that defines the structure of the report.
-        output (str):
-            Path of the directory where the file will be stored. If it does not exist, it is created automatically.
-        repository (str):
-            Base path of the repository or project to be analyzed.
-        framework (str):
-            Name of the framework used, which must have a compatible mapping method.
-        modules (List[ModuleInfo]):
-            List of `ModuleInfo` objects representing the analyzed modules in the repository.
-
-    Returns:
-        str:
-            Path of the generated DOCX file.
-    """
-    docx = DocxTemplate(template)
-
-    repository_name = Path(repository).resolve().name
-
-    dep_map = dependencies_map(modules, repository, framework)
-    statistics = repository_metrics(modules, repository)
-
-    hotspots = _hotspots(statistics.sloc, statistics.module_stats)
-    dependencies = _dependencies(dep_map, repository)
-    doc_coverage = _doc_coverage(
-        statistics.class_percent, 
-        statistics.method_percent, 
-        statistics.attribute_percent
-    )
-
-    context = {
-        'repository_name': f'{repository_name}.',
-        'analysis_date': f'{datetime.now().strftime("%A, %B %d, %Y")}.',
-        'summary': _summary(
-            statistics.sloc,
-            framework,
-            repository_name,
-            statistics.class_percent,
-            statistics.method_percent,
-            statistics.attribute_percent,
-            statistics.module_stats,
-            hotspots
-        ),
-        'global_stats': _global_stats(
-            statistics.loc, 
-            statistics.sloc, 
-            framework, 
-            modules
-        ),
-        'modules_overview': statistics.modules_overview,
-        'hotspots': hotspots,
-        'complexity_notes': _complexity_notes(
-            statistics.sloc, 
-            statistics.module_stats
-        ),
-        'doc_coverage': doc_coverage,
-        'best_documented_modules': _best_documented_modules(
-            statistics.module_stats
-        ),
-        'worst_documented_modules': _worst_documented_modules(
-            statistics.module_stats
-        ),
-        'dependencies': dependencies,
-        'risks': _risks(
-            statistics.sloc,
-            statistics.class_percent,
-            statistics.method_percent,
-            statistics.attribute_percent,
-            statistics.module_stats,
-            hotspots,
-            dependencies
-        ),
-        'risk_impact': _risk_impact(
-            statistics.sloc,
-            statistics.class_percent,
-            statistics.method_percent,
-            statistics.attribute_percent,
-            hotspots,
-            dependencies
-        ),
-        'recommendations': _recommendations(
-            statistics.class_percent,
-            statistics.method_percent,
-            statistics.attribute_percent,
-            statistics.module_stats,
-            hotspots,
-            dependencies
-        ),
-        'version': ALGORITHM_VERSION
-    }
-
-    docx.render(context)
-    path = os.path.join(output, FILE)
-    docx.save(path)
-
-    bold_core_module_names(path)
-    
-    return path
-
-def _summary(
+def summary(
     sloc: int, 
     framework: str,
     repository_name: str,
@@ -210,7 +91,7 @@ def _summary(
         'key_points': key_points
     }
 
-def _global_stats(loc: int, sloc: int, framework: str, modules: List[ModuleInfo]) -> Dict[str, Union[str, int]]:
+def global_stats(loc: int, sloc: int, framework: str, modules: List[ModuleInfo]) -> Dict[str, Union[str, int]]:
     """
     Build basic global statistics for the report.
 
@@ -238,7 +119,7 @@ def _global_stats(loc: int, sloc: int, framework: str, modules: List[ModuleInfo]
         'total_sloc': f'{sloc}.'
     }
 
-def _hotspots(sloc: int, module_stats: List[Dict[str, Union[str, int]]]) -> List[Dict[str, Union[str, int]]]:
+def hotspots_modules(sloc: int, module_stats: List[Dict[str, Union[str, int]]]) -> List[Dict[str, Union[str, int]]]:
     """
     Identify hotspot modules based on size, approximate complexity, and documentation.
 
@@ -302,7 +183,7 @@ def _hotspots(sloc: int, module_stats: List[Dict[str, Union[str, int]]]) -> List
         reverse=True
     )
 
-def _complexity_notes(sloc: int, module_stats: List[Dict[str, Union[str, int]]], *, limit: int = 10) -> List[str]:
+def complexity_notes(sloc: int, module_stats: List[Dict[str, Union[str, int]]], *, limit: int = 10) -> List[str]:
     """
     Generates interpretive notes on complexity based on simple metrics.
 
@@ -394,7 +275,7 @@ def _complexity_notes(sloc: int, module_stats: List[Dict[str, Union[str, int]]],
 
     return notes[:limit]
 
-def _doc_coverage(
+def documentation_coverage(
     class_percent: Union[float, int], 
     method_percent: Union[float, int], 
     attribute_percent: Union[float, int]
@@ -423,7 +304,7 @@ def _doc_coverage(
         'attribute_percent': f'{attribute_percent}\u0025.'
     }
 
-def _best_documented_modules(module_stats: List[Dict[str, Union[str, int]]], *, limit: int = 5) -> List[str]:
+def best_documented_modules(module_stats: List[Dict[str, Union[str, int]]], *, limit: int = 5) -> List[str]:
     """
     Select the modules with the best documentation coverage.
 
@@ -464,7 +345,7 @@ def _best_documented_modules(module_stats: List[Dict[str, Union[str, int]]], *, 
         reverse=True
     )[:limit]
 
-def _worst_documented_modules(module_stats: List[Dict[str, Union[str, int]]], *, limit: int = 5) -> List[str]:
+def worst_documented_modules(module_stats: List[Dict[str, Union[str, int]]], *, limit: int = 5) -> List[str]:
     """
     Select the modules with the worst documentation coverage.
 
@@ -504,7 +385,7 @@ def _worst_documented_modules(module_stats: List[Dict[str, Union[str, int]]], *,
         key=lambda candidate: candidate['percent']
     )[:limit]
 
-def _dependencies(
+def internal_dependencies(
     dep_map: Dict[str, Set[str]], 
     repository: str, 
     *, 
@@ -638,7 +519,7 @@ def _dependencies(
         'summary': summary_parts
     }
 
-def _risks(
+def technical_risks(
     sloc: int,
     class_percent: Union[float, int], 
     method_percent: Union[float, int], 
@@ -742,7 +623,7 @@ def _risks(
 
     return risks[:limit]
 
-def _risk_impact(
+def risk_impact(
     sloc: int,
     class_percent: Union[float, int], 
     method_percent: Union[float, int], 
@@ -926,7 +807,7 @@ def _risk_impact(
         'evolution': evolution
     }
     
-def _recommendations(
+def recommendations(
     class_percent: Union[float, int], 
     method_percent: Union[float, int], 
     attribute_percent: Union[float, int],

@@ -1,4 +1,4 @@
-# Codemnesis - v.0.15.1
+# Codemnesis - v.0.16.0
 
 ## 🧾 Project description
 
@@ -145,15 +145,19 @@ Codemnesis/
 │   │   ├── __init__.py
 │   │   ├── csharp.py
 │   │   └── python.py
-│   ├── generators
-│   │   ├── __init__.py
-│   │   ├── graphic.py
-│   │   ├── readme.py
-│   │   └── report.py
 │   ├── models
 │   │   ├── __init__.py
 │   │   ├── entities.py
 │   │   └── metrics.py
+│   ├── renderers
+│   │   ├── builders
+│   │   │   ├── analysis.py
+│   │   │   ├── diagram.py
+│   │   │   └── markdown.py
+│   │   ├── __init__.py
+│   │   ├── graphic.py
+│   │   ├── readme.py
+│   │   └── report.py
 │   ├── tools
 │   │   ├── docs.py
 │   │   ├── docstring.py
@@ -164,8 +168,6 @@ Codemnesis/
 │   │   ├── maps.py
 │   │   └── metrics.py
 │   └── execute.py
-├── templates
-│   └── analysis_report.docx
 ├── .gitignore
 ├── LICENSE
 ├── main.py
@@ -229,7 +231,7 @@ class Engine:
 m = Engine()
 print(m.status)            # ✔️ Output: on
 print(m.__status)          # ❌ Error: AttributeError
-print(m._Engine__status)    # ✔️ Access possible, but not recommended (Output: on)
+print(m._Engine__status)   # ✔️ Access possible, but not recommended (Output: on)
 ```
 > [!WARNING]
 > Although technically accessible via the mangled name, its direct use is discouraged outside the context of the class itself.
@@ -237,7 +239,7 @@ print(m._Engine__status)    # ✔️ Access possible, but not recommended (Outpu
 ## 📖 Additional documentation
 
 - [Graphviz](https://graphviz.org/)
-- [Jinja2](https://jinja.palletsprojects.com/en/stable/)
+- [ReportLab](https://www.reportlab.com/docs/reportlab-userguide.pdf)
 
 ## 🔒 License
 
