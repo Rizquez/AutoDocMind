@@ -1,6 +1,7 @@
 # MODULES (EXTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
-import logging, re
+import re
+import logging
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import List, Optional
@@ -174,6 +175,9 @@ def analyze_csharp(path: Path) -> ModuleInfo:
         metrics=module_metrics(src, classes, [])
     )
 
+# TODO:
+# It is not a formal C# parser: if there are curly braces `{` or `}` within strings, comments 
+# or multiline literals, the count may be off and return an incorrect block
 def _extract_text_block(src: str, idx_brace: int) -> str:
     """
     Extracts the block of text delimited by curly brackets `{ ... }` starting from an initial position.
@@ -192,10 +196,6 @@ def _extract_text_block(src: str, idx_brace: int) -> str:
         str:
             Substring of the source code representing the block delimited by braces, from `src[idx_brace]` 
             to just before the matching closing brace.
-
-    ### TODO
-    It is not a formal C# parser: if there are curly braces `{` or `}` within strings, comments, or multiline 
-    literals, the count may be off and return an incorrect block.
     """
     depth = 0
     idx_end = len(src)

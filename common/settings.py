@@ -1,6 +1,7 @@
 # MODULES (EXTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
 from __future__ import annotations
+
 import os
 from typing import Set, TYPE_CHECKING
 
@@ -46,8 +47,6 @@ class Settings:
         self.__excluded = self.__set_excluded(args.excluded)
         self.__included = EXTENSIONS.get(self.__framework, set())
         
-        self.__template = os.path.join(PROJECT_ROOT, 'templates', 'analysis_report.docx')
-
         if args.output:
             self.__output = os.path.join(args.output, FOLDER)
         else:
@@ -68,10 +67,6 @@ class Settings:
     @property
     def included(self) -> Set[str]:
         return self.__included
-    
-    @property
-    def template(self) -> str:
-        return self.__template
     
     @property
     def output(self) -> str:

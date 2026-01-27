@@ -1,4 +1,4 @@
-# Codemnesis - v.0.15.1
+# Codemnesis - v.0.18.0
 
 ## 🧾 Project description
 
@@ -39,10 +39,13 @@ Technical documentation often lags behind the pace of development, creating thre
 - **Graph** associated with the map of import dependencies between modules.
 - **Report** with relevant information on common indicators and interpreted metrics.
 
-> [!IMPORTANT]
+> [!NOTE]
 > Supported programming languages: Python and C#.
 
-## 💽 Installation (Windows)
+> [!IMPORTANT]
+> Although Codemnesis is compatible with Windows, Linux, and macOS, the cloning, installation, and execution instructions in this document are focused on Windows. For other operating systems, links to the official documentation for the tools used are included.
+
+## 💽 Installation
 
 Clone this repository (ssh):
 ```sh
@@ -87,7 +90,7 @@ If Graphviz is not installed or is not accessible from the PATH, graph generatio
 ExecutableNotFound: failed to execute 'dot'
 ```
 
-### Installing Graphviz on Windows
+### Installing Graphviz
 
 1. Download the official installer from their [website](https://graphviz.org/download/).
 2. Run the installer and make sure to check the option: *Add Graphviz to the system PATH*.
@@ -142,17 +145,21 @@ Codemnesis/
 │   │   ├── __init__.py
 │   │   ├── csharp.py
 │   │   └── python.py
-│   ├── generators
-│   │   ├── __init__.py
-│   │   ├── graphic.py
-│   │   ├── readme.py
-│   │   └── report.py
 │   ├── models
 │   │   ├── __init__.py
 │   │   ├── entities.py
 │   │   └── metrics.py
+│   ├── renderers
+│   │   ├── builders
+│   │   │   ├── diagram.py
+│   │   │   ├── document.py
+│   │   │   ├── insights.py
+│   │   │   └── markdown.py
+│   │   ├── __init__.py
+│   │   ├── graphic.py
+│   │   ├── readme.py
+│   │   └── report.py
 │   ├── tools
-│   │   ├── docs.py
 │   │   ├── docstring.py
 │   │   ├── fixers.py
 │   │   ├── nums.py
@@ -161,8 +168,6 @@ Codemnesis/
 │   │   ├── maps.py
 │   │   └── metrics.py
 │   └── execute.py
-├── templates
-│   └── analysis_report.docx
 ├── .gitignore
 ├── LICENSE
 ├── main.py
@@ -226,7 +231,7 @@ class Engine:
 m = Engine()
 print(m.status)            # ✔️ Output: on
 print(m.__status)          # ❌ Error: AttributeError
-print(m._Engine__status)    # ✔️ Access possible, but not recommended (Output: on)
+print(m._Engine__status)   # ✔️ Access possible, but not recommended (Output: on)
 ```
 > [!WARNING]
 > Although technically accessible via the mangled name, its direct use is discouraged outside the context of the class itself.
@@ -234,7 +239,7 @@ print(m._Engine__status)    # ✔️ Access possible, but not recommended (Outpu
 ## 📖 Additional documentation
 
 - [Graphviz](https://graphviz.org/)
-- [Jinja2](https://jinja.palletsprojects.com/en/stable/)
+- [ReportLab](https://www.reportlab.com/docs/reportlab-userguide.pdf)
 
 ## 🔒 License
 
