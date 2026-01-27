@@ -1,4 +1,4 @@
-# Codemnesis - v.0.16.0
+# Codemnesis - v.0.17.0
 
 ## 🧾 Project description
 
@@ -151,15 +151,15 @@ Codemnesis/
 │   │   └── metrics.py
 │   ├── renderers
 │   │   ├── builders
-│   │   │   ├── analysis.py
 │   │   │   ├── diagram.py
+│   │   │   ├── document.py
+│   │   │   ├── insights.py
 │   │   │   └── markdown.py
 │   │   ├── __init__.py
 │   │   ├── graphic.py
 │   │   ├── readme.py
 │   │   └── report.py
 │   ├── tools
-│   │   ├── docs.py
 │   │   ├── docstring.py
 │   │   ├── fixers.py
 │   │   ├── nums.py

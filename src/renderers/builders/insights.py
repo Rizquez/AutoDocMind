@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 # OPERATIONS / CLASS CREATION / GENERAL FUNCTIONS
 # ---------------------------------------------------------------------------------------------------------------------
 
-def summary(
+def general_summary(
     sloc: int, 
     framework: str,
     repository_name: str,
