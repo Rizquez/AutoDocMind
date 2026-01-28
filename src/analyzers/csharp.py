@@ -190,7 +190,6 @@ def _extract_text_block(src: str, idx_brace: int) -> str:
     Args:
         src (str):
             Complete content of the C# file in text format.
-
         idx_brace (int):
             Index (0-based) within src where the opening brace `{` of the block to be extracted is located.
 
@@ -244,7 +243,6 @@ def _collect_xml_text(lines: List[str], start_idx: int) -> Optional[str]:
     Args:
         lines (List[str]):
             List of lines from the source file.
-
         start_idx (int):
             Index where the class or method appears, used to search documentation upwards.
 
