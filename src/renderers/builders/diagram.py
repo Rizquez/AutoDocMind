@@ -1,5 +1,6 @@
 # MODULES (EXTERNAL)
 # ---------------------------------------------------------------------------------------------------------------------
+import re
 from pathlib import Path
 from graphviz import Digraph
 from typing import List, Dict, Set
@@ -14,15 +15,13 @@ from common.constants import ALGORITHM_VERSION
 # OPERATIONS / CLASS CREATION / GENERAL FUNCTIONS
 # ---------------------------------------------------------------------------------------------------------------------
 
-FILE = 'Graphic'
-
 CLUSTER_BG = '#f5f5f5'
 NODE_FILL = '#ffffff'
 NODE_BORDER = '#aaaaaa'
-EDGE_INTRA = '#444444'
-EDGE_INTER = '#1f77b4'
+EDGE_INTRA = '#1f77b4'
+EDGE_INTER = '#444444'
 
-def dependency_diagram(repository: str, dep_map: Dict[str, Set[str]], format: str) -> Digraph:
+def dependency_diagram(repository: str, dep_map: Dict[str, Set[str]], file_format: str) -> Digraph:
     """
     Construct a repository dependency diagram using Graphviz.
 
@@ -44,7 +43,7 @@ def dependency_diagram(repository: str, dep_map: Dict[str, Set[str]], format: st
         dep_map(Dict[str, Set[str]]): 
             Dictionary where each key is a module and its value is a set of modules on which 
             it depends.
-        format (str): 
+        file_format (str): 
             Output format supported by Graphviz.
 
     Returns:
@@ -55,7 +54,7 @@ def dependency_diagram(repository: str, dep_map: Dict[str, Set[str]], format: st
     subtitle = f'Repository analyzed: {Path(repository).resolve().name}'
     
     dot = Digraph(
-        format=format,
+        format=file_format,
         graph_attr={
             'rankdir': 'LR',
             'splines': 'ortho',
@@ -66,7 +65,7 @@ def dependency_diagram(repository: str, dep_map: Dict[str, Set[str]], format: st
             'pad': '1.5',
             'nodesep': '1.5'
         },
-        node_attr={ # Default style of nodes
+        node_attr={
             'shape': 'ellipse',
             'style': 'filled',
             'fillcolor': NODE_FILL,
@@ -81,29 +80,35 @@ def dependency_diagram(repository: str, dep_map: Dict[str, Set[str]], format: st
     # This avoids problems with long paths and ensures valid IDs for Graphviz
     id_map = identifiers_map(all_path)
 
+    root = Path(repository).resolve()
     groups: Dict[str, List[str]] = {}
     for path in all_path:
-        name = Path(path).parent.name or 'root'
-        groups.setdefault(name, []).append(path)
+        parent = Path(path).resolve().parent
+        relative = parent.relative_to(root)
+        group_key = relative.as_posix() if str(relative) != '.' else 'root'
+        groups.setdefault(group_key, []).append(path)
 
     # For each folder (group), two subgraphs are created:
     #   outer: invisible wrapper that helps space clusters
     #   inner: actual cluster with colored background and folder label
-    for name, paths in groups.items():
-        outer = Digraph(name=f'cluster_wrap_{name.lower()}')
+    for group_key, paths in groups.items():
+        cluster_id = _sanitize_id(group_key)
+
+        outer = Digraph(name=f'cluster_wrap_{cluster_id}')
         outer.attr(
             style='invis',
             color='none',
             peripheries='0'
         )
 
-        inner = Digraph(name=f'cluster_{name.lower()}')
+        inner = Digraph(name=f'cluster_{cluster_id}')
         inner.attr(
-            label=name,
+            label=group_key,
             style='rounded,filled',
             color=CLUSTER_BG,
             fillcolor=CLUSTER_BG,
-            fontsize='48'
+            fontsize='48',
+            margin='50'
         )
 
         # Creation of nodes within the cluster
@@ -115,15 +120,19 @@ def dependency_diagram(repository: str, dep_map: Dict[str, Set[str]], format: st
 
     # Creation of dependency edges between modules
     for src, targets in dep_map.items():
-        src_name = Path(src).parent.name or 'root'
+        src_parent = Path(src).resolve().parent
+        src_relative = src_parent.relative_to(root)
+        src_group = src_relative.as_posix() if str(src_relative) != '.' else 'root'
         src_id = id_map[src]
 
         for dest in targets:
-            dest_name = Path(dest).parent.name or 'root'
+            dest_parent = Path(dest).resolve().parent
+            dest_relative = dest_parent.relative_to(root)
+            dest_group = dest_relative.as_posix() if str(dest_relative) != '.' else 'root'
             dest_id = id_map[dest]
 
-            same_group = (src_name == dest_name)
-            dot.edge(src_id, dest_id, color=EDGE_INTER if same_group else EDGE_INTRA)
+            same_group = (src_group == dest_group)
+            dot.edge(src_id, dest_id, color=EDGE_INTRA if same_group else EDGE_INTER)
 
     return dot
 
@@ -153,6 +162,30 @@ def _module_paths(dep_map: Dict[str, Set[str]]) -> List[str]:
         all_path.extend(list(path))
 
     return sorted(set(all_path))
+
+def _sanitize_id(text: str) -> str:
+    """
+    Converts a text string into a safe identifier for Graphviz.
+
+    This function transforms the received text into a valid identifier by removing or replacing 
+    characters that can cause conflicts in Graphviz, such as slashes, dots, spaces, or other special 
+    symbols.
+
+    **Process applied:**
+        - Converts all text to lowercase.
+        - Replaces any character that is not alphanumeric or an underscore with `_`.
+        - Removes extra underscores at the beginning and end.
+        - Returns `root` if the result is empty.
+
+    Args:
+        text (str):
+            Original text to be sanitized (usually a path or logical name).
+
+    Returns:
+        str:
+            Normalized identifier compatible with Graphviz.
+    """
+    return re.sub(r'[^a-z0-9_]+', '_', text.lower()).strip('_') or 'root'
 
 # ---------------------------------------------------------------------------------------------------------------------
 # END OF FILE

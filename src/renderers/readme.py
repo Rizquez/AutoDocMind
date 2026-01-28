@@ -19,13 +19,11 @@ if TYPE_CHECKING:
 
 __all__ = ['render_readme']
 
-FILE = 'README.md'
+FILE = 'Documentation.md'
 
 def render_readme(modules: List[ModuleInfo], repository: str, output: str) -> Path:
     """
     Write the generated README content to the file system.
-
-    Create the output directory if it does not exist and save the received text to a Markdown.
 
     Args:
         modules (List[ModuleInfo]):
@@ -33,8 +31,7 @@ def render_readme(modules: List[ModuleInfo], repository: str, output: str) -> Pa
         repository (str):
             Base path of the repository or project to be analyzed.
         output (str):
-            Path of the directory where the file will be stored. If it does not exist, 
-            it is created automatically.
+            Path of the directory where the file will be stored.
 
     Returns:
         Path:
